@@ -204,7 +204,12 @@ function renderPlaylists() {
       el('div', { className: 'cover sp-cover' }),
       el('div', { className: 'title', textContent: p.name, style: 'flex:1;min-width:0' }),
       el('span', { className: 'sp-btn', textContent: '▶ Play' }));
-    a.onclick = (e) => { if (openSpotify(p.url, p.name)) e.preventDefault(); };
+    a.onclick = (e) => {
+      if (typeof SP !== 'undefined' && SP.connected() && SP.playUrl(p.url)) { e.preventDefault(); return; }
+      if (openSpotify(p.url, p.name)) e.preventDefault();
+    };
+    const m = String(p.url).match(/(playlist|album|track|artist|show|episode)\/([A-Za-z0-9]+)/);
+    if (m) a.dataset.spUri = `spotify:${m[1]}:${m[2]}`;
     sp.append(el('li', {}, a));
   });
 }
@@ -234,7 +239,8 @@ function renderPlaylistDetail() {
 $('#pl-back').onclick = () => { openPlaylist = null; renderPlaylistDetail(); };
 
 function markPlaying() {
-  const id = queue[index]?.id;
+  const spotifyOn = typeof SP !== 'undefined' && SP.active();
+  const id = spotifyOn ? null : queue[index]?.id;
   const paused0 = audio.paused;
   document.querySelectorAll('.row[data-id]').forEach((r) => {
     const on = r.dataset.id === id;
@@ -248,7 +254,7 @@ function markPlaying() {
   // Highlight the playlist that's playing, with "Now playing · 2 of 5".
   const paused = audio.paused;
   document.querySelectorAll('.row[data-pl]').forEach((r) => {
-    const on = !!source && r.dataset.pl === source;
+    const on = !spotifyOn && !!source && r.dataset.pl === source;
     r.classList.toggle('playing', on);
     const meta = r.querySelector('.meta');
     const n = Number(r.dataset.count);
@@ -269,6 +275,8 @@ function markPlaying() {
       btn.setAttribute('aria-label', btn.title);
     }
   });
+  if (typeof SP !== 'undefined') SP.markSpotify();
+  if (spotifyOn) return; // Spotify paints its own now-playing line
   const p = source && (data.playlists || []).find((x) => plKey(x) === source);
   $('#np-source').textContent = p ? `from ${p.name}` : '';
   $('#np-source').hidden = !p;
@@ -373,6 +381,7 @@ function playList(list, i, src = null) {
 }
 
 function load(i) {
+  if (typeof SP !== 'undefined') SP.yieldToLocal();
   index = (i + queue.length) % queue.length;
   const song = queue[index];
   audio.src = song.file;
@@ -412,13 +421,14 @@ const prev = () => {
   if (audio.currentTime > 3) audio.currentTime = 0; else load(index - 1);
 };
 
-$('#toggle').onclick = () => (audio.paused ? audio.play() : audio.pause());
-$('#next').onclick = next;
-$('#prev').onclick = prev;
+const spOn = () => typeof SP !== 'undefined' && SP.active();
+$('#toggle').onclick = () => { if (spOn()) return SP.control('toggle'); audio.paused ? audio.play() : audio.pause(); };
+$('#next').onclick = () => (spOn() ? SP.control('next') : next());
+$('#prev').onclick = () => (spOn() ? SP.control('prev') : prev());
 $('#play-all').onclick = () => playList(filtered(), 0);
 $('#shuffle-all').onclick = () => playList(shuffle(filtered()), 0);
 
-audio.addEventListener('play', () => { $('#toggle').textContent = '⏸'; markPlaying(); });
+audio.addEventListener('play', () => { if (typeof SP !== 'undefined') SP.yieldToLocal(); $('#toggle').textContent = '⏸'; markPlaying(); });
 audio.addEventListener('pause', () => { $('#toggle').textContent = '▶'; markPlaying(); });
 audio.addEventListener('ended', () => { if (index < queue.length - 1) next(); });
 audio.addEventListener('timeupdate', () => {
@@ -434,7 +444,8 @@ let seeking = false;
 const seek = $('#seek');
 seek.addEventListener('input', () => { seeking = true; });
 seek.addEventListener('change', () => {
-  if (audio.duration) audio.currentTime = (seek.value / 100) * audio.duration;
+  if (spOn()) SP.seekTo(seek.value / 100);
+  else if (audio.duration) audio.currentTime = (seek.value / 100) * audio.duration;
   seeking = false;
 });
 
@@ -460,6 +471,7 @@ async function boot() {
   if (data.title) { document.title = data.title; $('#app-title').textContent = data.title; }
   renderSongs();
   renderPlaylists();
+  if (typeof SP !== 'undefined') SP.init(data);
 }
 boot();
 

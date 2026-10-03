@@ -58,6 +58,16 @@
       <div id="playlist-index">
         <h2>Playlists</h2>
         <ul id="app-playlists" class="list"></ul>
+        <div id="my-sp" hidden>
+          <h2>Your Spotify</h2>
+          <p id="my-sp-hint" class="sp-hint"></p>
+          <div class="sp-actions">
+            <button id="sp-connect" class="sp-btn" hidden>Connect Spotify</button>
+            <button id="sp-disconnect" class="sp-link" hidden>Disconnect</button>
+          </div>
+          <div id="sp-msg-box" class="sp-msg" hidden></div>
+          <ul id="my-sp-list" class="list"></ul>
+        </div>
         <h2>On YouTube <span class="sub">(videos with lyrics)</span></h2>
         <ul id="yt-playlists" class="list"></ul>
         <div id="sp-section" hidden>
@@ -109,5 +119,6 @@
   <audio id="audio" preload="none"></audio>
   <script src="version.js"></script>
   <script src="app.js"></script>
+  <script src="spotify.js"></script>
 </body>
 </html>

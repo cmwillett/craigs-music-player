@@ -182,6 +182,7 @@ function render() {
   renderPlaylistEditors(data);
   $('#yt-lists').value = (data.youtubePlaylists || []).map((p) => `${p.name} | ${p.url}`).join('\n');
   $('#sp-lists').value = (data.spotifyPlaylists || []).map((p) => `${p.name} | ${p.url}`).join('\n');
+  $('#sp-client').value = data.spotify?.clientId || '';
   renderPending();
 }
 
@@ -482,6 +483,19 @@ $('#pl-new').onclick = () => {
   renderPlaylistEditors(draft());
   const last = $('#pl-edit-list').lastElementChild;
   last?.querySelector('.p-name')?.focus();
+};
+
+// Spotify Connect setup
+$('#sp-redirect').textContent = location.origin + location.pathname.replace(/[^/]*$/, '');
+$('#sp-copy').onclick = async () => {
+  try { await navigator.clipboard.writeText($('#sp-redirect').textContent); $('#sp-copy').textContent = 'Copied!'; }
+  catch { $('#sp-copy').textContent = 'Select it and copy'; }
+};
+$('#sp-client-save').onclick = () => {
+  const id = $('#sp-client').value.trim();
+  if (id && !/^[0-9a-f]{32}$/i.test(id)) return say('#sp-client-msg', "That doesn't look like a Spotify Client ID (32 letters and numbers).", 'err');
+  queue(id ? 'Set Spotify Client ID' : 'Remove Spotify Client ID', (d) => { if (id) d.spotify = { ...(d.spotify || {}), clientId: id }; else delete d.spotify; });
+  say('#sp-client-msg', 'Added to your changes.', 'ok');
 };
 
 $('#sp-save').onclick = () => {

@@ -117,6 +117,24 @@
       </div>
 
       <div class="card">
+        <h2 style="margin-top:0;color:var(--text)">Spotify Connect (full songs)</h2>
+        <p class="hint">Lets up to 5 Spotify Premium people play your Spotify playlists with full songs. One-time setup:</p>
+        <ol class="hint" style="padding-left:20px;line-height:1.6">
+          <li>Go to <a href="https://developer.spotify.com/dashboard" target="_blank" rel="noopener" class="link">developer.spotify.com/dashboard</a> and sign in with your Spotify account.</li>
+          <li><strong>Create app.</strong> Name: <code>Craig's Songs</code>. Description: anything. Check <strong>Web API</strong>.</li>
+          <li>Redirect URI: paste this exactly, then click <strong>Add</strong>:<br>
+            <code id="sp-redirect" style="user-select:all;word-break:break-all"></code>
+            <button type="button" id="sp-copy" class="link">Copy</button></li>
+          <li>Save, then copy the app's <strong>Client ID</strong> into the box below.</li>
+          <li>In the app's <strong>Settings → User Management</strong>, add the name and Spotify email of each person who should get full songs (you included).</li>
+        </ol>
+        <label>Spotify Client ID</label>
+        <input id="sp-client" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="32 letters and numbers">
+        <button id="sp-client-save" class="primary">Add to changes</button>
+        <div id="sp-client-msg" class="msg"></div>
+      </div>
+
+      <div class="card">
         <h2 style="margin-top:0;color:var(--text)">Spotify playlists</h2>
         <p class="hint">One per line: <code>Name | link</code>. In Spotify: open the playlist → ⋯ → Share → Copy link to playlist.</p>
         <textarea id="sp-lists" rows="4" style="width:100%;padding:12px;border-radius:10px;border:1px solid #3a3f4c;background:var(--bg);color:var(--text);font:inherit"></textarea>

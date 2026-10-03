@@ -159,3 +159,13 @@ body.modal-open { overflow: hidden; }
 .sp-cover { background: #1db954; }
 .sp-btn { flex: none; padding: 8px 12px; border-radius: 10px; background: #1db954; color: #08130c; font-size: .85rem; font-weight: 700; }
 .video-frame.spotify { aspect-ratio: auto; height: min(560px, 70vh); background: #121212; }
+
+/* Spotify Connect */
+.sp-hint { color: var(--muted); font-size: .85rem; margin: -4px 0 8px; }
+.sp-actions { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
+.sp-actions [hidden] { display: none; }
+.sp-link { color: var(--muted); font-size: .85rem; text-decoration: underline; }
+.sp-msg { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; background: var(--card-2); border-left: 3px solid #1db954;
+  border-radius: 10px; padding: 10px 12px; margin: 4px 0 10px; font-size: .9rem; }
+.sp-msg[hidden] { display: none; }
+a.sp-btn { text-decoration: none; display: inline-block; }

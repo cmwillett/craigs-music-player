@@ -1,7 +1,8 @@
 // Caches the app shell so it opens instantly. Songs stream from the network
 // (and songs.json is always fetched fresh) so new songs show up right away.
-const CACHE = 'songs-shell-v2';
-const SHELL = ['./', 'index.html', 'styles.css', 'app.js', 'manifest.webmanifest', 'icons/icon-192.png', 'icons/icon-512.png'];
+importScripts('version.js');
+const CACHE = 'songs-shell-' + APP_VERSION;
+const SHELL = ['./', 'index.html', 'version.js', 'styles.css', 'app.js', 'spotify.js', 'manifest.webmanifest', 'icons/icon-192.png', 'icons/icon-512.png'];
 
 self.addEventListener('install', (e) => {
   e.waitUntil(caches.open(CACHE).then((c) => c.addAll(SHELL)).then(() => self.skipWaiting()));
