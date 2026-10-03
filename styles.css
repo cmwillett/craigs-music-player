@@ -222,3 +222,8 @@ a.sp-btn { text-decoration: none; display: inline-block; }
   .controls button { width: 40px; }
   .controls .mode { width: 34px; }
 }
+
+/* Spotify "Play on" picker */
+.sp-device { display: flex; align-items: center; gap: 8px; color: var(--muted); font-size: .85rem; margin: 0 0 10px; }
+.sp-device[hidden] { display: none; }
+.sp-device select { flex: 1; min-width: 0; background: var(--card); color: var(--text); border: 0; border-radius: 8px; padding: 8px; font: inherit; }

@@ -180,14 +180,55 @@ const SP = (() => {
     playlists = out;
   }
 
+  // Where should music go? A device chosen in the "Play on" picker wins. Otherwise a phone
+  // plays on a phone and a computer on a computer — never silently on some other device
+  // that just happens to be "active" (e.g. the desktop at home while you're in the car).
+  const PREF_DEVICE = 'spotify-device-v1';
+  let devices = [];
+  async function loadDevices() {
+    const res = (await api('/me/player/devices')) || {};
+    devices = (res.devices || []).filter((d) => !d.is_restricted);
+    renderDevicePicker();
+    return devices;
+  }
   async function pickDevice() {
-    const { devices = [] } = (await api('/me/player/devices')) || {};
-    const usable = devices.filter((d) => !d.is_restricted);
-    const pick = usable.find((d) => d.is_active)
-      || (isPhone ? usable.find((d) => d.type === 'Smartphone') : usable.find((d) => d.type === 'Computer'))
-      || usable.find((d) => d.id === lastDevice)
-      || usable[0];
-    return pick ? pick.id : null;
+    await loadDevices();
+    const pref = load(PREF_DEVICE);
+    if (pref) {
+      const chosen = devices.find((d) => d.id === pref.id) || devices.find((d) => d.name === pref.name);
+      if (chosen) return chosen.id;
+    }
+    const mine = devices.filter((d) => d.type === (isPhone ? 'Smartphone' : 'Computer'));
+    const pick = mine.find((d) => d.is_active) || mine.find((d) => d.id === lastDevice) || mine[0];
+    return pick ? pick.id : null; // nothing of the right kind -> ask to open Spotify here
+  }
+
+  const typeIcon = (t) => ({ Smartphone: '📱', Computer: '💻', Speaker: '🔊', TV: '📺', CastAudio: '🔊', Tablet: '📱' }[t] || '🎵');
+  function renderDevicePicker() {
+    const sel = $('#sp-device');
+    if (!sel) return;
+    const pref = load(PREF_DEVICE);
+    sel.replaceChildren(new Option(isPhone ? 'This phone (automatic)' : 'This computer (automatic)', ''));
+    devices.forEach((d) => sel.append(new Option(`${typeIcon(d.type)} ${d.name}${d.is_active ? ' · playing' : ''}`, d.id)));
+    if (pref && !devices.some((d) => d.id === pref.id || d.name === pref.name)) {
+      sel.append(new Option(`${pref.name} (not available)`, pref.id));
+    }
+    const match = pref && (devices.find((d) => d.id === pref.id || d.name === pref.name)?.id || pref.id);
+    sel.value = match || '';
+  }
+  async function chooseDevice(id) {
+    const d = devices.find((x) => x.id === id);
+    if (!id) drop(PREF_DEVICE); else save(PREF_DEVICE, { id, name: d ? d.name : id });
+    // If Spotify is playing right now, move the music to the chosen device.
+    if (mode === 'spotify' && state?.is_playing) {
+      try {
+        const target = id || (await pickDevice());
+        if (!target) return needDevice();
+        await api('/me/player', { method: 'PUT', body: JSON.stringify({ device_ids: [target], play: true }) });
+        toast(`Now playing on ${devices.find((x) => x.id === target)?.name || 'that device'}`, null, null, 2500);
+        setTimeout(refresh, 800);
+      } catch (e) { explain(e); }
+    }
   }
 
   // ---------- playback ----------
@@ -310,7 +351,7 @@ const SP = (() => {
     if (img) c.src = img; else c.removeAttribute('src');
     let pos = state.progress_ms || 0;
     if (playing) pos = Math.min(item.duration_ms, pos + (Date.now() - stateAt));
-    $('#np-time').textContent = `${fmtMs(pos)} / ${fmtMs(item.duration_ms)}` + (state.device ? ` · ${state.device.name}` : '');
+    $('#np-time').textContent = `${fmtMs(pos)} / ${fmtMs(item.duration_ms)}` + (state.device ? ` · ${typeIcon(state.device.type)} ${state.device.name}` : '');
     if (!seeking) $('#seek').value = item.duration_ms ? (pos / item.duration_ms) * 100 : 0;
     const ctx = state.context?.uri;
     const name = ctx && (playlists || []).find((p) => p.uri === ctx)?.name
@@ -356,6 +397,7 @@ const SP = (() => {
     $('#sp-connect').hidden = !!auth;
     $('#sp-disconnect').hidden = !auth;
     $('#sp-manage').hidden = !auth || !playlists || !playlists.length;
+    $('#sp-device-row').hidden = !auth || managing;
     $('#sp-manage').textContent = managing ? 'Done' : 'Choose playlists';
     $('#sp-manage').className = managing ? 'sp-btn' : 'sp-link';
     $('#sp-disconnect').hidden = !auth || managing;
@@ -493,6 +535,10 @@ const SP = (() => {
       hidden = new Set(load(HIDDEN) || []);
       order = load(ORDER) || [];
       $('#sp-manage').onclick = () => { managing = !managing; render(); };
+      $('#sp-device').onchange = (e) => chooseDevice(e.target.value);
+      // Keep the "Play on" list fresh: when the Playlists tab opens and when the app comes back to the front.
+      document.querySelector('.tab[data-view=playlists]')?.addEventListener('click', () => { if (auth) loadDevices().catch(() => {}); });
+      document.addEventListener('visibilitychange', () => { if (!document.hidden && auth) loadDevices().catch(() => {}); });
       enableDrag($('#my-sp-list'));
       $('#sp-connect').onclick = () => connect();
       $('#sp-disconnect').onclick = () => { if (confirm('Disconnect Spotify on this device?')) disconnect(); };
@@ -501,6 +547,7 @@ const SP = (() => {
       render();
       if (auth) {
         try { await loadPlaylists(); } catch (e) { explain(e); playlists = playlists || []; }
+        loadDevices().catch(() => {});
         render();
         // If Spotify is already playing on this device, pick it up.
         try {
