@@ -1,18 +1,124 @@
 {
   "title": "Craig's Songs",
   "songs": [
-    { "id": "they-call-me-the-craig", "title": "They Call Me The Craig", "file": "music/they-call-me-the-craig.mp3", "cover": "", "youtube": "", "tags": [] },
-    { "id": "the-right-craig", "title": "The Right Craig", "file": "music/the-right-craig.mp3", "cover": "", "youtube": "", "tags": [] },
-    { "id": "good-dog-titus", "title": "Good Dog Titus", "file": "music/good-dog-titus.mp3", "cover": "", "youtube": "", "tags": [] },
-    { "id": "grip-it-and-sip-it", "title": "Grip It and Sip It", "file": "music/grip-it-and-sip-it.mp3", "cover": "", "youtube": "", "tags": [] },
-    { "id": "they-call-him-slim", "title": "They Call Him Slim", "file": "music/they-call-him-slim.mp3", "cover": "", "youtube": "", "tags": [] },
-    { "id": "here-comes-big-sexy", "title": "Here Comes Big Sexy", "file": "music/here-comes-big-sexy.mp3", "cover": "", "youtube": "", "tags": [] }
+    {
+      "id": "they-call-me-the-craig",
+      "title": "They Call Me The Craig",
+      "file": "music/they-call-me-the-craig.mp3",
+      "cover": "",
+      "youtube": "https://www.youtube.com/watch?v=ctj7Kbr69JE",
+      "tags": [],
+      "description": "This is my personal theme song"
+    },
+    {
+      "id": "the-right-craig",
+      "title": "The Right Craig",
+      "file": "music/the-right-craig.mp3",
+      "cover": "",
+      "youtube": "https://www.youtube.com/watch?v=najPiqhKaEQ",
+      "tags": [
+        "family"
+      ],
+      "description": "This is a song about my wife and I"
+    },
+    {
+      "id": "good-dog-titus",
+      "title": "Good Dog Titus",
+      "file": "music/good-dog-titus.mp3",
+      "cover": "",
+      "youtube": "https://www.youtube.com/watch?v=AQ4_I3tID5I",
+      "tags": [
+        "family"
+      ],
+      "description": "A song about our dog, Titus"
+    },
+    {
+      "id": "grip-it-and-sip-it",
+      "title": "Grip It and Sip It",
+      "file": "music/grip-it-and-sip-it.mp3",
+      "cover": "",
+      "youtube": "",
+      "tags": []
+    },
+    {
+      "id": "they-call-him-slim",
+      "title": "They Call Him Slim",
+      "file": "music/they-call-him-slim.mp3",
+      "cover": "",
+      "youtube": "",
+      "tags": []
+    },
+    {
+      "id": "here-comes-big-sexy",
+      "title": "Here Comes Big Sexy",
+      "file": "music/here-comes-big-sexy.mp3",
+      "cover": "",
+      "youtube": "",
+      "tags": []
+    },
+    {
+      "id": "boats-n-hoes",
+      "title": "Boats n Hoes",
+      "file": "music/boats-n-hoes.mp3",
+      "cover": "",
+      "youtube": "",
+      "tags": []
+    },
+    {
+      "id": "dirty-mike-and-the-boyz",
+      "title": "Dirty Mike and the Boyz",
+      "file": "music/dirty-mike-and-the-boyz.mp3",
+      "cover": "",
+      "youtube": "",
+      "tags": []
+    },
+    {
+      "id": "i-thought-you-should-know",
+      "title": "I Thought You Should Know",
+      "file": "music/i-thought-you-should-know.mp3",
+      "cover": "",
+      "youtube": "",
+      "tags": []
+    },
+    {
+      "id": "streamwood-all-night-country-version",
+      "title": "Streamwood All Night Country Version",
+      "file": "music/streamwood-all-night-country-version.mp3",
+      "cover": "",
+      "youtube": "",
+      "tags": []
+    },
+    {
+      "id": "streamwood-all-night-irish-folk-version",
+      "title": "Streamwood All Night Irish Folk Version",
+      "file": "music/streamwood-all-night-irish-folk-version.mp3",
+      "cover": "",
+      "youtube": "",
+      "tags": []
+    },
+    {
+      "id": "streamwood-all-night-pop-version",
+      "title": "Streamwood All Night Pop Version",
+      "file": "music/streamwood-all-night-pop-version.mp3",
+      "cover": "",
+      "youtube": "",
+      "tags": []
+    }
   ],
   "playlists": [
-    { "name": "Everything", "songs": "all" }
+    {
+      "name": "Everything",
+      "songs": "all"
+    }
   ],
   "youtubePlaylists": [
-    { "name": "Family", "url": "" },
-    { "name": "Friends", "url": "" }
+    {
+      "name": "Family",
+      "url": ""
+    },
+    {
+      "name": "Friends",
+      "url": ""
+    }
   ]
 }
