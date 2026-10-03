@@ -80,13 +80,18 @@ $('#sort').onchange = (e) => { view.sort = e.target.value; saveView(); renderSon
 function songRow(song, list, src = null) {
   const tags = (song.tags || []).map((t) => el('span', { className: 'tag', textContent: t }));
   const text = el('div', { style: 'min-width:0;flex:1' },
-    el('div', { className: 'title', textContent: song.title }));
+    el('div', { className: 'title', textContent: song.title }),
+    el('div', { className: 'now', hidden: true }));
   if (song.description) text.append(el('div', { className: 'desc', textContent: song.description }));
   if (tags.length) text.append(el('div', { className: 'meta', style: 'margin-top:4px' }, tags));
   else if (!song.description) text.append(el('div', { className: 'meta', textContent: 'Tap to play' }));
 
   const main = el('button', { className: 'main' }, coverImg(song), text);
-  main.onclick = () => playList(list, list.indexOf(song), src);
+  main.onclick = () => {
+    // Tapping the song that's already loaded pauses/resumes instead of restarting it.
+    if (queue[index]?.id === song.id && audio.src) { audio.paused ? audio.play() : audio.pause(); return; }
+    playList(list, list.indexOf(song), src);
+  };
 
   const yt = el('a', {
     className: 'yt' + (song.youtube ? '' : ' disabled'),
@@ -108,7 +113,7 @@ function songRow(song, list, src = null) {
       li.classList.toggle('expanded');
       more.textContent = li.classList.contains('expanded') ? 'Less' : 'More';
     };
-    text.insertBefore(more, text.children[2] || null);
+    text.insertBefore(more, text.children[3] || null);
   }
   return li;
 }
@@ -216,7 +221,16 @@ $('#pl-back').onclick = () => { openPlaylist = null; renderPlaylistDetail(); };
 
 function markPlaying() {
   const id = queue[index]?.id;
-  document.querySelectorAll('.row[data-id]').forEach((r) => r.classList.toggle('playing', r.dataset.id === id));
+  const paused0 = audio.paused;
+  document.querySelectorAll('.row[data-id]').forEach((r) => {
+    const on = r.dataset.id === id;
+    r.classList.toggle('playing', on);
+    const now = r.querySelector('.now');
+    if (!now) return;
+    now.hidden = !on;
+    if (on) now.replaceChildren(el('span', { className: 'eq' + (paused0 ? ' paused' : '') }, el('i'), el('i'), el('i')),
+      paused0 ? 'Paused · tap to resume' : 'Now playing');
+  });
   // Highlight the playlist that's playing, with "Now playing · 2 of 5".
   const paused = audio.paused;
   document.querySelectorAll('.row[data-pl]').forEach((r) => {

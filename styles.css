@@ -152,3 +152,5 @@ body.modal-open { overflow: hidden; }
 @keyframes eq { 0%, 100% { height: 3px; } 50% { height: 11px; } }
 @media (prefers-reduced-motion: reduce) { .eq i { animation: none; height: 7px; } }
 .row .pl-play { min-width: 44px; display: inline-flex; align-items: center; justify-content: center; }
+.row .now { color: var(--accent); font-size: .8rem; font-weight: 600; margin-top: 2px; }
+.row .now[hidden] { display: none; }
