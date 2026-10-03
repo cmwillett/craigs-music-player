@@ -30,11 +30,14 @@ h2 .sub { font-weight: 400; }
 .tab { padding: 8px 16px; border-radius: 999px; background: var(--card); color: var(--muted); }
 .tab.active { background: var(--accent); color: var(--accent-ink); font-weight: 600; }
 
-main { padding: 4px 16px; max-width: 720px; margin: 0 auto; }
+main { padding: 4px 16px; max-width: 720px; margin: 0 auto; min-width: 0; }
+html, body { overflow-x: hidden; }
+.row, .view, #song-list, #pl-songs, .list > li { min-width: 0; }
+.row .main > div:not(.cover) { min-width: 0; flex: 1; }
 .actions { display: flex; gap: 8px; margin: 8px 0 12px; }
 .pill { padding: 10px 18px; border-radius: 999px; background: var(--card-2); font-weight: 600; }
 
-.list { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.list { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; }
 .row {
   display: flex; align-items: center; gap: 12px;
   background: var(--card); border-radius: var(--radius); padding: 10px;
@@ -134,3 +137,6 @@ main { padding: 4px 16px; max-width: 720px; margin: 0 auto; }
 .video-frame iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
 .modal-link { display: block; text-align: center; padding: 12px; color: var(--muted); font-size: .85rem; }
 body.modal-open { overflow: hidden; }
+
+/* titles wrap to two lines on narrow screens */
+.row .title { white-space: normal; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; overflow-wrap: anywhere; line-height: 1.25; }
