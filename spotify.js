@@ -29,6 +29,17 @@ const SP = (() => {
   const HIDDEN = 'spotify-hidden-v1';
   let hidden = new Set();   // playlist URIs this person chose to hide (saved on this device)
   const saveHidden = () => save(HIDDEN, [...hidden]);
+  const ORDER = 'spotify-order-v1';
+  let order = [];           // playlist URIs in the order this person arranged them (saved on this device)
+
+  // Playlists in the saved order; ones not arranged yet keep Spotify's order at the end.
+  function ordered() {
+    const pos = new Map(order.map((u, i) => [u, i]));
+    return playlists
+      .map((p, i) => ({ p, i }))
+      .sort((a, b) => (pos.has(a.p.uri) ? pos.get(a.p.uri) : 1e6 + a.i) - (pos.has(b.p.uri) ? pos.get(b.p.uri) : 1e6 + b.i))
+      .map(({ p }) => p);
+  }
 
   // ---------- helpers ----------
   const load = (k) => { try { return JSON.parse(localStorage.getItem(k)); } catch { return null; } };
@@ -329,11 +340,12 @@ const SP = (() => {
       return;
     }
     $('#my-sp-hint').textContent = managing
-      ? 'Check the playlists you want to see here, then tap Done.'
+      ? 'Check the playlists to show, drag ≡ to reorder, then tap Done.'
       : 'Plays in the Spotify app on this device. Keep Spotify open in the background.';
     if (!playlists) { list.append(el('li', { className: 'empty', textContent: 'Loading your playlists…' })); return; }
     if (!playlists.length) { list.append(el('li', { className: 'empty', textContent: 'No playlists found on your Spotify account.' })); return; }
-    const shown = managing ? playlists : playlists.filter((p) => !hidden.has(p.uri));
+    const all = ordered();
+    const shown = managing ? all : all.filter((p) => !hidden.has(p.uri));
     if (!managing && !shown.length) {
       list.append(el('li', { className: 'empty', textContent: 'All your Spotify playlists are hidden. Tap Choose playlists to show some.' }));
     }
@@ -356,7 +368,10 @@ const SP = (() => {
         };
         main.onclick = flip;
         box.onclick = (e) => { e.stopPropagation(); flip(); box.checked = !hidden.has(p.uri); };
-        const li = el('li', { className: 'row' + (hidden.has(p.uri) ? ' sp-off' : '') }, main, box);
+        const handle = el('span', { className: 'drag', textContent: '≡', title: 'Drag to reorder' });
+        handle.setAttribute('aria-hidden', 'true');
+        const li = el('li', { className: 'row' + (hidden.has(p.uri) ? ' sp-off' : '') }, handle, main, box);
+        li.dataset.spUri = p.uri;
         list.append(li);
         return;
       }
@@ -387,6 +402,58 @@ const SP = (() => {
     markSpotify();
   }
 
+  // Drag to reorder (works with touch and mouse via pointer events; HTML drag-and-drop doesn't work on phones).
+  function enableDrag(list) {
+    list.addEventListener('pointerdown', (e) => {
+      const handle = e.target.closest('.drag');
+      if (!handle || !managing) return;
+      const li = handle.closest('li.row');
+      e.preventDefault();
+      handle.setPointerCapture(e.pointerId);
+      li.classList.add('dragging');
+      let startY = e.clientY;
+      const gap = 8;
+      let scrollTimer = null;
+      let lastY = e.clientY;
+
+      const reflow = () => {
+        li.style.transform = `translateY(${lastY - startY}px)`;
+        // Keep swapping while the finger is past a neighbour's midpoint (a fast drag can cross several rows at once).
+        for (let guard = 0; guard < 200; guard++) {
+          const next = li.nextElementSibling?.matches('li.row') ? li.nextElementSibling : null;
+          const prev = li.previousElementSibling?.matches('li.row') ? li.previousElementSibling : null;
+          if (next && lastY > next.getBoundingClientRect().top + next.offsetHeight / 2) {
+            list.insertBefore(next, li); startY += next.offsetHeight + gap;
+          } else if (prev && lastY < prev.getBoundingClientRect().top + prev.offsetHeight / 2) {
+            // Move the neighbour below us (never move the dragged row itself: that drops the pointer capture).
+            list.insertBefore(prev, li.nextSibling); startY -= prev.offsetHeight + gap;
+          } else break;
+        }
+        li.style.transform = `translateY(${lastY - startY}px)`;
+      };
+      const autoScroll = () => {
+        const edge = 90, bottomEdge = innerHeight - 150; // leave room for the player bar
+        const step = lastY < edge ? -12 : lastY > bottomEdge ? 12 : 0;
+        if (step) { scrollBy(0, step); startY -= step; reflow(); }
+      };
+      const move = (ev) => { lastY = ev.clientY; reflow(); };
+      const up = () => {
+        handle.removeEventListener('pointermove', move);
+        handle.removeEventListener('pointerup', up);
+        handle.removeEventListener('pointercancel', up);
+        clearInterval(scrollTimer);
+        li.classList.remove('dragging');
+        li.style.transform = '';
+        order = [...list.querySelectorAll('li.row')].map((r) => r.dataset.spUri).filter(Boolean);
+        save(ORDER, order);
+      };
+      handle.addEventListener('pointermove', move);
+      handle.addEventListener('pointerup', up);
+      handle.addEventListener('pointercancel', up);
+      scrollTimer = setInterval(autoScroll, 16);
+    });
+  }
+
   function updateCount() {
     const c = $('#sp-count');
     if (!c || !playlists) return;
@@ -400,7 +467,9 @@ const SP = (() => {
       clientId = (d.spotify && d.spotify.clientId) || '';
       auth = load(STORE);
       hidden = new Set(load(HIDDEN) || []);
+      order = load(ORDER) || [];
       $('#sp-manage').onclick = () => { managing = !managing; render(); };
+      enableDrag($('#my-sp-list'));
       $('#sp-connect').onclick = () => connect();
       $('#sp-disconnect').onclick = () => { if (confirm('Disconnect Spotify on this device?')) disconnect(); };
       if (!clientId) { render(); return; }

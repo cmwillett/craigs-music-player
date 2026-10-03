@@ -176,3 +176,9 @@ a.sp-btn { text-decoration: none; display: inline-block; }
 .sp-manage-bar { display: flex; align-items: center; gap: 14px; color: var(--muted); font-size: .85rem; padding: 2px 2px 4px; }
 .sp-manage-bar span { flex: 1; }
 .sp-hidden-note { color: var(--muted); font-size: .8rem; padding: 2px 4px; }
+
+/* drag to reorder */
+.drag { flex: none; width: 28px; text-align: center; font-size: 1.4rem; line-height: 1; color: var(--muted);
+  cursor: grab; touch-action: none; user-select: none; -webkit-user-select: none; padding: 10px 0; }
+.row.dragging { position: relative; z-index: 3; box-shadow: 0 10px 30px rgba(0,0,0,.5); outline: 2px solid #1db954; transition: none; }
+.row.dragging .drag { cursor: grabbing; color: #1db954; }
