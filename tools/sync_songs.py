@@ -11,6 +11,7 @@ The title comes from the filename: "good-dog-titus.mp3" -> "Good Dog Titus".
 Fix titles, descriptions, categories and YouTube links later in the admin page.
 """
 import json
+from datetime import date
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -52,7 +53,7 @@ def main():
         while sid in known_ids:
             sid += '-2'
         songs.append({'id': sid, 'title': title_from(mp3.stem), 'file': rel,
-                      'cover': '', 'youtube': '', 'tags': []})
+                      'cover': '', 'youtube': '', 'tags': [], 'added': date.today().isoformat()})
         known_ids.add(sid)
         added.append(rel)
 

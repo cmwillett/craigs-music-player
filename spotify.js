@@ -217,6 +217,29 @@ const SP = (() => {
     } catch (e) { explain(e); }
   }
 
+  // Shuffle / repeat on Spotify (repeat: off | all | one  ->  off | context | track)
+  const REPEAT_TO_SP = { off: 'off', all: 'context', one: 'track' };
+  const REPEAT_FROM_SP = { off: 'off', context: 'all', track: 'one' };
+  function modes() {
+    return { shuffle: !!state?.shuffle_state, repeat: REPEAT_FROM_SP[state?.repeat_state] || 'off' };
+  }
+  async function setShuffle(on) {
+    try {
+      await api(`/me/player/shuffle?state=${on}`, { method: 'PUT' });
+      if (state) state.shuffle_state = on;
+      paint();
+      toast(on ? 'Shuffle on' : 'Shuffle off', null, null, 1500);
+    } catch (e) { explain(e); }
+  }
+  async function setRepeat(mode) {
+    try {
+      await api(`/me/player/repeat?state=${REPEAT_TO_SP[mode]}`, { method: 'PUT' });
+      if (state) state.repeat_state = REPEAT_TO_SP[mode];
+      paint();
+      toast({ off: 'Repeat off', all: 'Repeating the playlist', one: 'Repeating this song' }[mode], null, null, 1500);
+    } catch (e) { explain(e); }
+  }
+
   async function seekTo(fraction) {
     const dur = state?.item?.duration_ms;
     if (!dur) return;
@@ -270,6 +293,7 @@ const SP = (() => {
   const fmtMs = (ms) => fmt((ms || 0) / 1000);
 
   function paint() {
+    if (typeof updateModeButtons === 'function') updateModeButtons();
     if (mode !== 'spotify') return;
     const item = state?.item;
     const playing = !!state?.is_playing;
@@ -490,6 +514,9 @@ const SP = (() => {
     playUrl(url) { const uri = spotifyUri(url); if (uri) playContext(uri); return !!uri; },
     control,
     seekTo,
+    modes,
+    setShuffle,
+    setRepeat,
     yieldToLocal,
     markSpotify,
   };

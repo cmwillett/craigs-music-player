@@ -8,6 +8,7 @@ Copies the MP3 (and cover art) into the repo with a clean filename and adds the
 entry to songs.json. If a song with the same id exists, it is updated instead.
 """
 import argparse, json, re, shutil
+from datetime import date
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -29,7 +30,7 @@ def main():
     data = json.loads((ROOT / 'songs.json').read_text())
     song = next((s for s in data['songs'] if s['id'] == sid), None)
     if song is None:
-        song = {'id': sid, 'title': a.title, 'file': f'music/{sid}.mp3', 'cover': '', 'youtube': '', 'tags': []}
+        song = {'id': sid, 'title': a.title, 'file': f'music/{sid}.mp3', 'cover': '', 'youtube': '', 'tags': [], 'added': date.today().isoformat()}
         data['songs'].append(song)
 
     if a.mp3:

@@ -246,10 +246,11 @@ $('#add-save').onclick = async () => {
   const mp3B64 = await fileB64(mp3);
   const coverExt = cover ? (cover.name.split('.').pop() || 'jpg').toLowerCase() : null;
   const coverB64 = cover ? await fileB64(cover) : null;
+  const today = new Date().toISOString().slice(0, 10);
 
   queue(`Add "${title}"`, (data, ctx) => {
     let song = data.songs.find((s) => s.id === id);
-    if (!song) { song = { id, title, file: '', cover: '', youtube: '', tags: [] }; data.songs.push(song); }
+    if (!song) { song = { id, title, file: '', cover: '', youtube: '', tags: [], added: today }; data.songs.push(song); }
     song.title = title;
     song.file = `music/${id}.mp3`;
     ctx.files.set(song.file, mp3B64);

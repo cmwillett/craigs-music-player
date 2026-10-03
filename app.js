@@ -27,6 +27,111 @@ const shuffle = (arr) => {
 };
 const playable = () => data.songs.filter((s) => s.file);
 
+// ---------- small helpers for new features ----------
+const NEW_DAYS = 14; // how long a song shows the NEW badge
+const isNew = (s) => !!s.added && (Date.now() - Date.parse(s.added)) < NEW_DAYS * 864e5;
+let search = '';
+const SHARE_ICON = '<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M12 3v12M7 8l5-5 5 5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>';
+const appUrl = () => location.origin + location.pathname.replace(/[^/]*$/, '');
+
+let toastTimer = null;
+function toast(text, actionLabel, action, ms = 5000) {
+  const t = $('#toast');
+  t.replaceChildren(el('span', { textContent: text }));
+  if (actionLabel) {
+    const b = el('button', { className: 'toast-btn', textContent: actionLabel });
+    b.onclick = () => { t.hidden = true; action(); };
+    t.append(b);
+  }
+  t.hidden = false;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { t.hidden = true; }, ms);
+}
+
+async function shareSong(song) {
+  const url = `${appUrl()}?song=${encodeURIComponent(song.id)}`;
+  const title = data.title || "Craig's Songs";
+  if (navigator.share) {
+    try { await navigator.share({ title: song.title, text: `Listen to "${song.title}" on ${title}`, url }); } catch (_) { /* cancelled */ }
+    return;
+  }
+  try { await navigator.clipboard.writeText(url); toast('Link copied. Paste it anywhere to share.'); }
+  catch { toast(url, null, null, 12000); }
+}
+
+// Opened from a shared link (?song=id): show that song with a Play button.
+function openSharedSong() {
+  const params = new URLSearchParams(location.search);
+  const id = params.get('song');
+  if (!id) return;
+  params.delete('song');
+  const rest = params.toString();
+  history.replaceState(null, '', location.pathname + (rest ? `?${rest}` : '') + location.hash);
+  const song = data.songs.find((s) => s.id === id);
+  if (!song) { toast("That song isn't in the app anymore."); return; }
+  document.querySelector('.tab[data-view=songs]').click();
+  view.filter = 'all'; search = ''; $('#search').value = ''; $('#search-clear').hidden = true;
+  renderSongs();
+  const row = document.querySelector(`#song-list .row[data-id="${CSS.escape(id)}"]`);
+  if (row) {
+    row.scrollIntoView({ block: 'center' });
+    row.classList.add('flash');
+    setTimeout(() => row.classList.remove('flash'), 2500);
+  }
+  toast(`Shared with you: ${song.title}`, '▶ Play', () => { const list = filtered(); playList(list, list.indexOf(song)); }, 15000);
+}
+
+// ---------- shuffle / repeat ----------
+const MODES = 'songs-modes-v1';
+let modes = { shuffle: false, repeat: 'off' }; // repeat: off | all | one
+try { Object.assign(modes, JSON.parse(localStorage.getItem(MODES)) || {}); } catch {}
+const saveModes = () => { try { localStorage.setItem(MODES, JSON.stringify(modes)); } catch {} };
+let baseQueue = []; // the list in its original order (so shuffle can be turned off again)
+
+function updateModeButtons() {
+  const sp = typeof SP !== 'undefined' && SP.active() ? SP.modes() : null;
+  const m = sp || modes;
+  const sh = $('#shuffle-mode'), rp = $('#repeat-mode');
+  sh.classList.toggle('on', !!m.shuffle);
+  sh.setAttribute('aria-pressed', String(!!m.shuffle));
+  sh.title = m.shuffle ? 'Shuffle: on' : 'Shuffle: off';
+  rp.classList.toggle('on', m.repeat !== 'off');
+  rp.classList.toggle('repeat-one', m.repeat === 'one');
+  const label = { off: 'Repeat: off', all: 'Repeat: all', one: 'Repeat: this song' }[m.repeat];
+  rp.title = label; rp.setAttribute('aria-label', label);
+}
+
+function toggleShuffle() {
+  if (typeof SP !== 'undefined' && SP.active()) return SP.setShuffle(!SP.modes().shuffle);
+  modes.shuffle = !modes.shuffle;
+  saveModes();
+  const current = queue[index];
+  if (current && baseQueue.length) {
+    if (modes.shuffle) {
+      queue = [current, ...shuffle(baseQueue.filter((s) => s !== current))];
+      index = 0;
+    } else {
+      queue = baseQueue.slice();
+      index = Math.max(0, queue.indexOf(current));
+    }
+    markPlaying();
+  }
+  updateModeButtons();
+  toast(modes.shuffle ? 'Shuffle on' : 'Shuffle off', null, null, 1500);
+}
+
+function cycleRepeat() {
+  const order = ['off', 'all', 'one'];
+  if (typeof SP !== 'undefined' && SP.active()) {
+    const cur = SP.modes().repeat;
+    return SP.setRepeat(order[(order.indexOf(cur) + 1) % 3]);
+  }
+  modes.repeat = order[(order.indexOf(modes.repeat) + 1) % 3];
+  saveModes();
+  updateModeButtons();
+  toast({ off: 'Repeat off', all: 'Repeating the list', one: 'Repeating this song' }[modes.repeat], null, null, 1500);
+}
+
 // ---------- rendering ----------
 function coverImg(song, cls = 'cover') {
   const img = el('img', { className: cls, alt: '', loading: 'lazy' });
@@ -54,6 +159,11 @@ function filtered() {
   // songs.json order = order added, so "newest" is the reverse of the file.
   let list = playable().map((s, i) => ({ s, i }));
   if (view.filter !== 'all') list = list.filter(({ s }) => hasTag(s, view.filter));
+  const q = search.trim().toLowerCase();
+  if (q) {
+    list = list.filter(({ s }) => [s.title, s.description, ...(s.tags || [])]
+      .some((t) => String(t || '').toLowerCase().includes(q)));
+  }
   if (view.sort === 'newest') list.sort((a, b) => b.i - a.i);
   if (view.sort === 'oldest') list.sort((a, b) => a.i - b.i);
   if (view.sort === 'title' || view.sort === 'category') list.sort((a, b) => a.s.title.localeCompare(b.s.title));
@@ -80,7 +190,7 @@ $('#sort').onchange = (e) => { view.sort = e.target.value; saveView(); renderSon
 function songRow(song, list, src = null) {
   const tags = (song.tags || []).map((t) => el('span', { className: 'tag', textContent: t }));
   const text = el('div', { style: 'min-width:0;flex:1' },
-    el('div', { className: 'title', textContent: song.title }),
+    el('div', { className: 'title' }, isNew(song) ? el('span', { className: 'new-badge', textContent: 'NEW' }) : null, song.title),
     el('div', { className: 'now', hidden: true }));
   if (song.description) text.append(el('div', { className: 'desc', textContent: song.description }));
   if (tags.length) text.append(el('div', { className: 'meta', style: 'margin-top:4px' }, tags));
@@ -102,7 +212,10 @@ function songRow(song, list, src = null) {
     title: song.youtube ? 'Watch the lyric video' : 'No video yet',
   });
   if (song.youtube) yt.onclick = (e) => { if (openVideo(song.youtube, song.title)) e.preventDefault(); };
-  const li = el('li', { className: 'row' }, main, yt);
+  const share = el('button', { className: 'share-btn', title: 'Share this song', innerHTML: SHARE_ICON });
+  share.setAttribute('aria-label', `Share ${song.title}`);
+  share.onclick = () => shareSong(song);
+  const li = el('li', { className: 'row' }, main, el('div', { className: 'row-actions' }, yt, share));
   li.dataset.id = song.id;
 
   // "more" toggle for long descriptions
@@ -124,7 +237,10 @@ function renderSongs() {
   box.replaceChildren();
   const list = filtered();
   $('#count').textContent = `${list.length} song${list.length === 1 ? '' : 's'}`;
-  if (!list.length) { box.append(el('p', { className: 'empty', textContent: 'No songs here yet.' })); return; }
+  if (!list.length) {
+    box.append(el('p', { className: 'empty', textContent: search.trim() ? `No songs match "${search.trim()}".` : 'No songs here yet.' }));
+    return;
+  }
 
   if (view.sort === 'category') {
     const groups = view.filter === 'all' ? [...allTags(), null] : [view.filter];
@@ -376,6 +492,13 @@ let source = null; // key of the playlist the queue came from (null = song list)
 function playList(list, i, src = null) {
   if (!list.length) return;
   source = src;
+  baseQueue = list.slice();
+  if (modes.shuffle) {
+    const first = list[i];
+    queue = [first, ...shuffle(list.filter((_, k) => k !== i))];
+    load(0);
+    return;
+  }
   queue = list;
   load(i);
 }
@@ -425,12 +548,25 @@ const spOn = () => typeof SP !== 'undefined' && SP.active();
 $('#toggle').onclick = () => { if (spOn()) return SP.control('toggle'); audio.paused ? audio.play() : audio.pause(); };
 $('#next').onclick = () => (spOn() ? SP.control('next') : next());
 $('#prev').onclick = () => (spOn() ? SP.control('prev') : prev());
+$('#shuffle-mode').onclick = toggleShuffle;
+$('#repeat-mode').onclick = cycleRepeat;
+updateModeButtons();
+$('#search').addEventListener('input', (e) => {
+  search = e.target.value;
+  $('#search-clear').hidden = !search;
+  renderSongs();
+});
+$('#search-clear').onclick = () => { search = ''; $('#search').value = ''; $('#search-clear').hidden = true; renderSongs(); $('#search').focus(); };
 $('#play-all').onclick = () => playList(filtered(), 0);
 $('#shuffle-all').onclick = () => playList(shuffle(filtered()), 0);
 
 audio.addEventListener('play', () => { if (typeof SP !== 'undefined') SP.yieldToLocal(); $('#toggle').textContent = '⏸'; markPlaying(); });
 audio.addEventListener('pause', () => { $('#toggle').textContent = '▶'; markPlaying(); });
-audio.addEventListener('ended', () => { if (index < queue.length - 1) next(); });
+audio.addEventListener('ended', () => {
+  if (modes.repeat === 'one') { audio.currentTime = 0; audio.play().catch(() => {}); return; }
+  if (index < queue.length - 1) next();
+  else if (modes.repeat === 'all') load(0);
+});
 audio.addEventListener('timeupdate', () => {
   const d = audio.duration || 0;
   $('#np-time').textContent = `${fmt(audio.currentTime)} / ${fmt(d)}`;
@@ -471,6 +607,7 @@ async function boot() {
   if (data.title) { document.title = data.title; $('#app-title').textContent = data.title; }
   renderSongs();
   renderPlaylists();
+  openSharedSong();
   if (typeof SP !== 'undefined') SP.init(data);
 }
 boot();

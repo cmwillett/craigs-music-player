@@ -182,3 +182,43 @@ a.sp-btn { text-decoration: none; display: inline-block; }
   cursor: grab; touch-action: none; user-select: none; -webkit-user-select: none; padding: 10px 0; }
 .row.dragging { position: relative; z-index: 3; box-shadow: 0 10px 30px rgba(0,0,0,.5); outline: 2px solid #1db954; transition: none; }
 .row.dragging .drag { cursor: grabbing; color: #1db954; }
+
+/* search */
+.search { position: relative; display: flex; align-items: center; gap: 8px; background: var(--card); border-radius: 12px; padding: 0 12px; margin-top: 8px; color: var(--muted); }
+.search input { flex: 1; min-width: 0; background: none; border: 0; outline: none; color: var(--text); font: inherit; padding: 11px 0; }
+.search input::-webkit-search-cancel-button { display: none; }
+.search:focus-within { outline: 2px solid var(--accent); }
+.search-clear { color: var(--muted); padding: 6px; }
+.search-clear[hidden] { display: none; }
+
+/* NEW badge */
+.new-badge { display: inline-block; background: var(--accent); color: var(--accent-ink); font-size: .65rem; font-weight: 800;
+  letter-spacing: .04em; border-radius: 5px; padding: 1px 5px; margin-right: 6px; vertical-align: 2px; }
+
+/* share */
+.row-actions { flex: none; display: flex; align-items: center; gap: 6px; }
+.share-btn { width: 36px; height: 36px; border-radius: 10px; background: var(--card-2); color: var(--muted); display: inline-flex; align-items: center; justify-content: center; }
+.share-btn:hover { color: var(--text); }
+.row.flash { animation: flash 2.4s ease-out; }
+@keyframes flash { 0%, 40% { box-shadow: 0 0 0 3px var(--accent); } 100% { box-shadow: 0 0 0 0 transparent; } }
+
+/* toast */
+.toast { position: fixed; left: 12px; right: 12px; bottom: calc(96px + env(safe-area-inset-bottom)); z-index: 40; max-width: 520px; margin: 0 auto;
+  display: flex; align-items: center; gap: 12px; background: #2f3442; color: var(--text); padding: 12px 14px; border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0,0,0,.4); font-size: .9rem; word-break: break-word; }
+.toast[hidden] { display: none; }
+.toast span { flex: 1; }
+.toast-btn { flex: none; background: var(--accent); color: var(--accent-ink); font-weight: 700; padding: 8px 14px; border-radius: 10px; }
+
+/* shuffle / repeat on the player bar */
+.controls .mode { width: 38px; height: 38px; color: var(--muted); position: relative; display: inline-flex; align-items: center; justify-content: center; }
+.controls .mode.on { color: var(--accent); }
+.controls .mode.on::after { content: ''; position: absolute; bottom: 2px; left: 50%; width: 4px; height: 4px; margin-left: -2px; border-radius: 50%; background: var(--accent); }
+.controls .mode .one { display: none; position: absolute; top: 5px; right: 4px; font-size: .6rem; font-weight: 800; background: var(--accent); color: var(--accent-ink); border-radius: 50%; width: 13px; height: 13px; line-height: 13px; text-align: center; }
+.controls .mode.repeat-one .one { display: block; }
+@media (max-width: 400px) {
+  #np-cover { display: none; }
+  .controls { gap: 0; }
+  .controls button { width: 40px; }
+  .controls .mode { width: 34px; }
+}
