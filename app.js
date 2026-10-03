@@ -193,6 +193,20 @@ function renderPlaylists() {
     a.onclick = (e) => { if (openVideo(p.url, p.name)) e.preventDefault(); };
     yt.append(el('li', {}, a));
   });
+
+  // Spotify playlists (added in the admin page) — tap to play inside the app.
+  const sp = $('#sp-playlists');
+  sp.replaceChildren();
+  const spLists = (data.spotifyPlaylists || []).filter((p) => p.url);
+  $('#sp-section').hidden = !spLists.length;
+  spLists.forEach((p) => {
+    const a = el('a', { className: 'row', href: p.url, target: '_blank', rel: 'noopener', style: 'text-decoration:none;color:inherit' },
+      el('div', { className: 'cover sp-cover' }),
+      el('div', { className: 'title', textContent: p.name, style: 'flex:1;min-width:0' }),
+      el('span', { className: 'sp-btn', textContent: '▶ Play' }));
+    a.onclick = (e) => { if (openSpotify(p.url, p.name)) e.preventDefault(); };
+    sp.append(el('li', {}, a));
+  });
 }
 
 function showPlaylist(key) {
@@ -287,12 +301,47 @@ function youtubeEmbed(url) {
   return null;
 }
 
+// Spotify link -> embed URL. Handles open.spotify.com/(intl-xx/)<type>/<id> and spotify:<type>:<id>.
+function spotifyEmbed(url) {
+  const s = String(url || '').trim();
+  let m = s.match(/^spotify:(playlist|album|track|artist|show|episode):([A-Za-z0-9]+)$/);
+  if (!m) {
+    let u;
+    try { u = new URL(s); } catch { return null; }
+    if (!/(^|\.)spotify\.com$/.test(u.hostname)) return null;
+    m = u.pathname.match(/^\/(?:intl-[a-z-]+\/)?(?:embed\/)?(playlist|album|track|artist|show|episode)\/([A-Za-z0-9]+)/);
+  }
+  if (!m) return null;
+  return { src: `https://open.spotify.com/embed/${m[1]}/${m[2]}?utm_source=generator&theme=0`, open: `https://open.spotify.com/${m[1]}/${m[2]}` };
+}
+
+function openSpotify(url, title) {
+  const sp = spotifyEmbed(url);
+  if (!sp) return false;
+  if (!audio.paused) audio.pause();
+  $('#video-title').textContent = title || '';
+  $('#video-open').href = sp.open;
+  $('#video-open').textContent = 'Open in Spotify ↗';
+  const frame = el('iframe', {
+    src: sp.src,
+    title: title || 'Spotify playlist',
+    allow: 'autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture',
+  });
+  $('#video-frame').classList.add('spotify');
+  $('#video-frame').replaceChildren(frame);
+  $('#video-modal').hidden = false;
+  document.body.classList.add('modal-open');
+  return true;
+}
+
 function openVideo(url, title) {
   const src = youtubeEmbed(url);
   if (!src) return false; // not a YouTube link we understand -> let the link open normally
   if (!audio.paused) audio.pause();
   $('#video-title').textContent = title || '';
   $('#video-open').href = url;
+  $('#video-open').textContent = 'Open in YouTube ↗';
+  $('#video-frame').classList.remove('spotify');
   const frame = el('iframe', {
     src,
     title: title || 'YouTube video',

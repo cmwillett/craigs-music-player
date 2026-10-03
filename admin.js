@@ -181,6 +181,7 @@ function render() {
   renderEdit(data);
   renderPlaylistEditors(data);
   $('#yt-lists').value = (data.youtubePlaylists || []).map((p) => `${p.name} | ${p.url}`).join('\n');
+  $('#sp-lists').value = (data.spotifyPlaylists || []).map((p) => `${p.name} | ${p.url}`).join('\n');
   renderPending();
 }
 
@@ -481,6 +482,15 @@ $('#pl-new').onclick = () => {
   renderPlaylistEditors(draft());
   const last = $('#pl-edit-list').lastElementChild;
   last?.querySelector('.p-name')?.focus();
+};
+
+$('#sp-save').onclick = () => {
+  const lines = $('#sp-lists').value.split('\n').map((l) => l.split('|').map((x) => x.trim())).filter(([n, u]) => n || u);
+  const bad = lines.find(([n, u]) => !n || !/spotify\.com\/|^spotify:/.test(u || ''));
+  if (bad) return say('#sp-msg', `Check this line: "${bad.join(' | ')}". It needs a name, then |, then a Spotify link.`, 'err');
+  const lists = lines.map(([name, url]) => ({ name, url }));
+  queue('Update Spotify playlists', (d) => { d.spotifyPlaylists = lists; });
+  say('#sp-msg', 'Added to your changes.', 'ok');
 };
 
 $('#yt-save').onclick = () => {

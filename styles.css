@@ -154,3 +154,8 @@ body.modal-open { overflow: hidden; }
 .row .pl-play { min-width: 44px; display: inline-flex; align-items: center; justify-content: center; }
 .row .now { color: var(--accent); font-size: .8rem; font-weight: 600; margin-top: 2px; }
 .row .now[hidden] { display: none; }
+
+/* Spotify */
+.sp-cover { background: #1db954; }
+.sp-btn { flex: none; padding: 8px 12px; border-radius: 10px; background: #1db954; color: #08130c; font-size: .85rem; font-weight: 700; }
+.video-frame.spotify { aspect-ratio: auto; height: min(560px, 70vh); background: #121212; }
