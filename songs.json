@@ -199,5 +199,8 @@
       "name": "Discover Weekly",
       "url": "https://open.spotify.com/playlist/37i9dQZEVXcPxYJHxzvrTk?si=a09b7805901d4eca"
     }
-  ]
+  ],
+  "spotify": {
+    "clientId": "4e18f7c918b94391b7142a03470e1130"
+  }
 }
