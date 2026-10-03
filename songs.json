@@ -37,72 +37,99 @@
       "title": "Grip It and Sip It",
       "file": "music/grip-it-and-sip-it.mp3",
       "cover": "",
-      "youtube": "",
-      "tags": []
+      "youtube": "https://www.youtube.com/watch?v=MnXscuCRYrA",
+      "tags": [
+        "friends"
+      ],
+      "description": "A song about 3 buddies and I who golf regularly together"
     },
     {
       "id": "they-call-him-slim",
       "title": "They Call Him Slim",
       "file": "music/they-call-him-slim.mp3",
       "cover": "",
-      "youtube": "",
-      "tags": []
+      "youtube": "https://www.youtube.com/watch?v=XPD3CnGnmy4",
+      "tags": [
+        "friends"
+      ],
+      "description": "This one goes to my buddy Mark \"Slim\" Helmers!"
     },
     {
       "id": "here-comes-big-sexy",
       "title": "Here Comes Big Sexy",
       "file": "music/here-comes-big-sexy.mp3",
       "cover": "",
-      "youtube": "",
-      "tags": []
+      "youtube": "https://www.youtube.com/watch?v=-nv_GV_ld_E",
+      "tags": [
+        "friends"
+      ],
+      "description": "This one goes out to my homey Joe \"Big Sexy\" Fuller!"
     },
     {
       "id": "boats-n-hoes",
       "title": "Boats n Hoes",
       "file": "music/boats-n-hoes.mp3",
       "cover": "",
-      "youtube": "",
-      "tags": []
+      "youtube": "https://www.youtube.com/watch?v=nzIod-B3tzY",
+      "tags": [
+        "friends"
+      ],
+      "description": "This one is about our WFL fantasy football league - disses all the other teams, but praises mine"
     },
     {
       "id": "dirty-mike-and-the-boyz",
       "title": "Dirty Mike and the Boyz",
       "file": "music/dirty-mike-and-the-boyz.mp3",
       "cover": "",
-      "youtube": "",
-      "tags": []
+      "youtube": "https://www.youtube.com/watch?v=8wtnXxuPmwI",
+      "tags": [
+        "friends"
+      ],
+      "description": "This one is about our WFL fantasy football league - disses all the other teams, but praises mine"
     },
     {
       "id": "i-thought-you-should-know",
       "title": "I Thought You Should Know",
       "file": "music/i-thought-you-should-know.mp3",
       "cover": "",
-      "youtube": "",
-      "tags": []
+      "youtube": "https://www.youtube.com/watch?v=-omXmLR4YhA",
+      "tags": [
+        "family"
+      ],
+      "description": "This is a song I wrote for my kids, Katie and Caleb"
     },
     {
       "id": "streamwood-all-night-country-version",
       "title": "Streamwood All Night Country Version",
       "file": "music/streamwood-all-night-country-version.mp3",
       "cover": "",
-      "youtube": "",
-      "tags": []
+      "youtube": "https://www.youtube.com/watch?v=yJNqWhgTR4k",
+      "tags": [
+        "friends"
+      ],
+      "description": "Neighborhood Party theme song!"
     },
     {
       "id": "streamwood-all-night-irish-folk-version",
       "title": "Streamwood All Night Irish Folk Version",
       "file": "music/streamwood-all-night-irish-folk-version.mp3",
       "cover": "",
-      "youtube": "",
-      "tags": []
+      "youtube": "https://www.youtube.com/watch?v=F58LqYXdK1w",
+      "tags": [
+        "friends"
+      ],
+      "description": "Neighborhood Party theme song!"
     },
     {
       "id": "streamwood-all-night-pop-version",
       "title": "Streamwood All Night Pop Version",
       "file": "music/streamwood-all-night-pop-version.mp3",
       "cover": "",
-      "youtube": "",
-      "tags": []
+      "youtube": "https://www.youtube.com/watch?v=YGjlX-H7lDY",
+      "tags": [
+        "friends"
+      ],
+      "description": "Neighborhood Party theme song!"
     }
   ],
   "playlists": [
