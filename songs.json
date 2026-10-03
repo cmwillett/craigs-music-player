@@ -141,11 +141,11 @@
   "youtubePlaylists": [
     {
       "name": "Family",
-      "url": ""
+      "url": "https://www.youtube.com/playlist?list=PLJTAV4jYwCZE"
     },
     {
       "name": "Friends",
-      "url": ""
+      "url": "https://www.youtube.com/playlist?list=PLRktkNm4WVoA"
     }
   ]
 }
