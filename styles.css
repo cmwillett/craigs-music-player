@@ -23,6 +23,7 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
   padding: calc(14px + env(safe-area-inset-top)) 16px 8px;
 }
 h1 { margin: 0 0 10px; font-size: 1.6rem; }
+.version { font-size: .75rem; font-weight: 500; color: var(--muted); vertical-align: middle; }
 h2 { font-size: 1rem; color: var(--muted); margin: 22px 0 8px; font-weight: 600; }
 h2 .sub { font-weight: 400; }
 .tabs { display: flex; gap: 8px; }
@@ -101,3 +102,14 @@ main { padding: 4px 16px; max-width: 720px; margin: 0 auto; }
 .controls { display: flex; align-items: center; gap: 4px; }
 .controls button { width: 44px; height: 44px; border-radius: 50%; font-size: 1.1rem; }
 .controls .big { background: var(--accent); color: var(--accent-ink); width: 52px; height: 52px; font-size: 1.3rem; }
+
+/* top-right link (Admin on the main page, Songs on the admin page) */
+.top { position: sticky; }
+.corner-link {
+  position: absolute; right: 16px; top: calc(16px + env(safe-area-inset-top));
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 7px 12px; border-radius: 999px; background: var(--card);
+  color: var(--muted); font-size: .85rem; font-weight: 600; text-decoration: none;
+}
+.corner-link:hover { color: var(--text); }
+.top h1 { padding-right: 110px; }

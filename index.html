@@ -15,7 +15,8 @@
 </head>
 <body>
   <header class="top">
-    <h1 id="app-title">Craig's Songs</h1>
+    <a href="admin.html" class="corner-link" aria-label="Admin"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M19.4 13a7.6 7.6 0 0 0 0-2l2.1-1.6-2-3.5-2.5 1a7.4 7.4 0 0 0-1.7-1L15 3.3h-4l-.3 2.6a7.4 7.4 0 0 0-1.7 1l-2.5-1-2 3.5L6.6 11a7.6 7.6 0 0 0 0 2l-2.1 1.6 2 3.5 2.5-1a7.4 7.4 0 0 0 1.7 1l.3 2.6h4l.3-2.6a7.4 7.4 0 0 0 1.7-1l2.5 1 2-3.5zM13 15.5A3.5 3.5 0 1 1 13 8.5a3.5 3.5 0 0 1 0 7z" transform="translate(-1 0)"/></svg><span>Admin</span></a>
+    <h1><span id="app-title">Craig's Songs</span> <span id="app-version" class="version"></span></h1>
     <nav class="tabs" role="tablist">
       <button class="tab active" data-view="songs" role="tab">Songs</button>
       <button class="tab" data-view="playlists" role="tab">Playlists</button>
@@ -58,7 +59,6 @@
       <ul id="app-playlists" class="list"></ul>
       <h2>On YouTube <span class="sub">(videos with lyrics)</span></h2>
       <ul id="yt-playlists" class="list"></ul>
-      <p style="margin-top:40px;text-align:center"><a href="admin.html" style="color:var(--muted);font-size:.8rem">Admin</a></p>
     </section>
   </main>
 
@@ -79,6 +79,7 @@
   </footer>
 
   <audio id="audio" preload="none"></audio>
+  <script src="version.js"></script>
   <script src="app.js"></script>
 </body>
 </html>
