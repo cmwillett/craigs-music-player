@@ -94,8 +94,9 @@ function songRow(song, list) {
     href: song.youtube || '#',
     target: '_blank',
     rel: 'noopener',
-    title: song.youtube ? 'Watch the lyric video on YouTube' : 'No video yet',
+    title: song.youtube ? 'Watch the lyric video' : 'No video yet',
   });
+  if (song.youtube) yt.onclick = (e) => { if (openVideo(song.youtube, song.title)) e.preventDefault(); };
   const li = el('li', { className: 'row' }, main, yt);
   li.dataset.id = song.id;
 
@@ -176,7 +177,8 @@ function renderPlaylists() {
     const a = el('a', { className: 'row', href: p.url, target: '_blank', rel: 'noopener', style: 'text-decoration:none;color:inherit' },
       el('div', { className: 'cover', style: 'background:#c4302b' }),
       el('div', { className: 'title', textContent: p.name, style: 'flex:1' }),
-      el('span', { className: 'yt', textContent: 'Open ↗' }));
+      el('span', { className: 'yt', textContent: '▶ Watch' }));
+    a.onclick = (e) => { if (openVideo(p.url, p.name)) e.preventDefault(); };
     yt.append(el('li', {}, a));
   });
 }
@@ -209,6 +211,60 @@ function markPlaying() {
   const id = queue[index]?.id;
   document.querySelectorAll('.row[data-id]').forEach((r) => r.classList.toggle('playing', r.dataset.id === id));
 }
+
+// ---------- YouTube player (in-app) ----------
+// Turns any YouTube link (watch, youtu.be, shorts, embed, playlist) into an embed URL.
+function youtubeEmbed(url) {
+  let u;
+  try { u = new URL(url); } catch { return null; }
+  const host = u.hostname.replace(/^www\.|^m\.|^music\./, '');
+  let id = null;
+  const list = u.searchParams.get('list');
+  if (host === 'youtu.be') id = u.pathname.slice(1).split('/')[0];
+  else if (host === 'youtube.com' || host === 'youtube-nocookie.com') {
+    if (u.pathname === '/watch') id = u.searchParams.get('v');
+    else {
+      const m = u.pathname.match(/^\/(shorts|embed|live)\/([\w-]{6,})/);
+      if (m && m[2] !== 'videoseries') id = m[2];
+    }
+  } else return null;
+  const params = new URLSearchParams({ autoplay: '1', rel: '0', playsinline: '1' });
+  if (id && /^[\w-]{6,}$/.test(id)) {
+    if (list) params.set('list', list);
+    const t = parseInt(u.searchParams.get('t') || u.searchParams.get('start') || '0', 10);
+    if (t) params.set('start', String(t));
+    return `https://www.youtube-nocookie.com/embed/${id}?${params}`;
+  }
+  if (list) { params.set('list', list); return `https://www.youtube-nocookie.com/embed/videoseries?${params}`; }
+  return null;
+}
+
+function openVideo(url, title) {
+  const src = youtubeEmbed(url);
+  if (!src) return false; // not a YouTube link we understand -> let the link open normally
+  if (!audio.paused) audio.pause();
+  $('#video-title').textContent = title || '';
+  $('#video-open').href = url;
+  const frame = el('iframe', {
+    src,
+    title: title || 'YouTube video',
+    allow: 'autoplay; encrypted-media; picture-in-picture; fullscreen',
+    allowFullscreen: true,
+    referrerPolicy: 'strict-origin-when-cross-origin',
+  });
+  $('#video-frame').replaceChildren(frame);
+  $('#video-modal').hidden = false;
+  document.body.classList.add('modal-open');
+  return true;
+}
+function closeVideo() {
+  $('#video-frame').replaceChildren(); // removing the iframe stops the video
+  $('#video-modal').hidden = true;
+  document.body.classList.remove('modal-open');
+}
+$('#video-close').onclick = closeVideo;
+$('#video-modal').addEventListener('click', (e) => { if (e.target.id === 'video-modal') closeVideo(); });
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !$('#video-modal').hidden) closeVideo(); });
 
 // ---------- playback ----------
 function playList(list, i) {

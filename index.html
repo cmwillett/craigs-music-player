@@ -90,6 +90,17 @@
     </div>
   </footer>
 
+  <div id="video-modal" class="modal" hidden role="dialog" aria-modal="true" aria-labelledby="video-title">
+    <div class="modal-box">
+      <div class="modal-head">
+        <div id="video-title" class="modal-title"></div>
+        <button id="video-close" class="modal-x" aria-label="Close">✕</button>
+      </div>
+      <div id="video-frame" class="video-frame"></div>
+      <a id="video-open" class="modal-link" target="_blank" rel="noopener">Open in YouTube ↗</a>
+    </div>
+  </div>
+
   <audio id="audio" preload="none"></audio>
   <script src="version.js"></script>
   <script src="app.js"></script>
