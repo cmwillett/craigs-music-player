@@ -6,8 +6,9 @@
       "title": "They Call Me The Craig",
       "file": "music/they-call-me-the-craig.mp3",
       "cover": "",
-      "youtube": "",
-      "tags": []
+      "youtube": "https://www.youtube.com/watch?v=ctj7Kbr69JE",
+      "tags": [],
+      "description": "This is my personal theme song"
     },
     {
       "id": "the-right-craig",
