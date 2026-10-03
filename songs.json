@@ -1,0 +1,18 @@
+{
+  "title": "Craig's Songs",
+  "songs": [
+    { "id": "they-call-me-the-craig", "title": "They Call Me The Craig", "file": "music/they-call-me-the-craig.mp3", "cover": "", "youtube": "", "tags": [] },
+    { "id": "the-right-craig", "title": "The Right Craig", "file": "music/the-right-craig.mp3", "cover": "", "youtube": "", "tags": [] },
+    { "id": "good-dog-titus", "title": "Good Dog Titus", "file": "music/good-dog-titus.mp3", "cover": "", "youtube": "", "tags": [] },
+    { "id": "grip-it-and-sip-it", "title": "Grip It and Sip It", "file": "music/grip-it-and-sip-it.mp3", "cover": "", "youtube": "", "tags": [] },
+    { "id": "they-call-him-slim", "title": "They Call Him Slim", "file": "music/they-call-him-slim.mp3", "cover": "", "youtube": "", "tags": [] },
+    { "id": "here-comes-big-sexy", "title": "Here Comes Big Sexy", "file": "music/here-comes-big-sexy.mp3", "cover": "", "youtube": "", "tags": [] }
+  ],
+  "playlists": [
+    { "name": "Everything", "songs": "all" }
+  ],
+  "youtubePlaylists": [
+    { "name": "Family", "url": "" },
+    { "name": "Friends", "url": "" }
+  ]
+}
