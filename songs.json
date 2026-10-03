@@ -5,7 +5,7 @@
       "id": "they-call-me-the-craig",
       "title": "They Call Me The Craig",
       "file": "music/they-call-me-the-craig.mp3",
-      "cover": "",
+      "cover": "covers/they-call-me-the-craig.jpg",
       "youtube": "https://www.youtube.com/watch?v=ctj7Kbr69JE",
       "tags": [
         "family",
@@ -17,7 +17,7 @@
       "id": "the-right-craig",
       "title": "The Right Craig",
       "file": "music/the-right-craig.mp3",
-      "cover": "",
+      "cover": "covers/the-right-craig.jpg",
       "youtube": "https://www.youtube.com/watch?v=najPiqhKaEQ",
       "tags": [
         "family"
@@ -28,7 +28,7 @@
       "id": "good-dog-titus",
       "title": "Good Dog Titus",
       "file": "music/good-dog-titus.mp3",
-      "cover": "",
+      "cover": "covers/good-dog-titus.jpg",
       "youtube": "https://www.youtube.com/watch?v=AQ4_I3tID5I",
       "tags": [
         "family"
@@ -39,7 +39,7 @@
       "id": "grip-it-and-sip-it",
       "title": "Grip It and Sip It",
       "file": "music/grip-it-and-sip-it.mp3",
-      "cover": "",
+      "cover": "covers/grip-it-and-sip-it.jpg",
       "youtube": "https://www.youtube.com/watch?v=MnXscuCRYrA",
       "tags": [
         "friends"
@@ -50,7 +50,7 @@
       "id": "they-call-him-slim",
       "title": "They Call Him Slim",
       "file": "music/they-call-him-slim.mp3",
-      "cover": "",
+      "cover": "covers/they-call-him-slim.jpg",
       "youtube": "https://www.youtube.com/watch?v=XPD3CnGnmy4",
       "tags": [
         "friends"
@@ -61,7 +61,7 @@
       "id": "here-comes-big-sexy",
       "title": "Here Comes Big Sexy",
       "file": "music/here-comes-big-sexy.mp3",
-      "cover": "",
+      "cover": "covers/here-comes-big-sexy.png",
       "youtube": "https://www.youtube.com/watch?v=-nv_GV_ld_E",
       "tags": [
         "friends"
@@ -72,7 +72,7 @@
       "id": "boats-n-hoes",
       "title": "Boats n Hoes",
       "file": "music/boats-n-hoes.mp3",
-      "cover": "",
+      "cover": "covers/boats-n-hoes.jpg",
       "youtube": "https://www.youtube.com/watch?v=nzIod-B3tzY",
       "tags": [
         "friends"
@@ -83,7 +83,7 @@
       "id": "dirty-mike-and-the-boyz",
       "title": "Dirty Mike and the Boyz",
       "file": "music/dirty-mike-and-the-boyz.mp3",
-      "cover": "",
+      "cover": "covers/dirty-mike-and-the-boyz.jpg",
       "youtube": "https://www.youtube.com/watch?v=8wtnXxuPmwI",
       "tags": [
         "friends"
@@ -94,7 +94,7 @@
       "id": "i-thought-you-should-know",
       "title": "I Thought You Should Know",
       "file": "music/i-thought-you-should-know.mp3",
-      "cover": "",
+      "cover": "covers/i-thought-you-should-know.jpeg",
       "youtube": "https://www.youtube.com/watch?v=-omXmLR4YhA",
       "tags": [
         "family"
