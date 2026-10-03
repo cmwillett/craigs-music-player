@@ -136,6 +136,36 @@
     {
       "name": "Everything",
       "songs": "all"
+    },
+    {
+      "id": "family-songs-musage4c",
+      "name": "Family Songs",
+      "songs": [
+        "they-call-me-the-craig",
+        "the-right-craig",
+        "good-dog-titus",
+        "i-thought-you-should-know"
+      ]
+    },
+    {
+      "id": "friend-songs-musahkyf",
+      "name": "Friend Songs",
+      "songs": [
+        "they-call-him-slim",
+        "here-comes-big-sexy",
+        "dirty-mike-and-the-boyz",
+        "boats-n-hoes",
+        "grip-it-and-sip-it"
+      ]
+    },
+    {
+      "id": "neighborhood-theme-songs-musahzx0",
+      "name": "Neighborhood Theme Songs",
+      "songs": [
+        "streamwood-all-night-country-version",
+        "streamwood-all-night-irish-folk-version",
+        "streamwood-all-night-pop-version"
+      ]
     }
   ],
   "youtubePlaylists": [
