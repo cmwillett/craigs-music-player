@@ -12,7 +12,7 @@
     body { padding-bottom: 40px; }
     .card { background: var(--card); border-radius: var(--radius); padding: 16px; margin: 12px 0; }
     label { display: block; font-size: .85rem; color: var(--muted); margin: 12px 0 4px; }
-    input[type=text], input[type=url], input[type=password], input[type=file] {
+    input[type=text], input[type=url], input[type=password], input[type=file], textarea {
       width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #3a3f4c;
       background: var(--bg); color: var(--text); font: inherit;
     }
@@ -27,6 +27,8 @@
     .hint { color: var(--muted); font-size: .85rem; }
     .edit-row { background: var(--card); border-radius: var(--radius); padding: 12px; }
     .edit-row summary { font-weight: 600; cursor: pointer; }
+    .tag-picks { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+    .tag-picks button { padding: 4px 10px; border-radius: 999px; background: var(--card-2); font-size: .8rem; color: var(--muted); }
     .btns { display: flex; gap: 8px; margin-top: 12px; }
     .btns button { flex: 1; padding: 10px; border-radius: 10px; background: var(--card-2); font-weight: 600; }
   </style>
@@ -67,14 +69,17 @@
         <h2 style="margin-top:0;color:var(--text)">Add a song</h2>
         <label>Title</label>
         <input id="add-title" type="text" placeholder="Grip It and Sip It">
+        <label>Short description (optional)</label>
+        <textarea id="add-desc" rows="2" maxlength="300" placeholder="Who it's for, what inspired it…"></textarea>
         <label>MP3 file</label>
         <input id="add-mp3" type="file" accept="audio/mpeg,.mp3">
         <label>Lyric video on YouTube (optional)</label>
         <input id="add-yt" type="url" placeholder="https://youtu.be/…">
         <label>Cover art (optional)</label>
         <input id="add-cover" type="file" accept="image/*">
-        <label>Tags (optional, comma separated)</label>
+        <label>Categories (optional, comma separated)</label>
         <input id="add-tags" type="text" placeholder="Family, Golf">
+        <div class="tag-picks" data-for="add-tags"></div>
         <button id="add-save" class="primary">Add song</button>
         <div id="add-msg" class="msg"></div>
       </div>

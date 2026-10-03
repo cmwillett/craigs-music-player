@@ -34,14 +34,58 @@ function coverImg(song, cls = 'cover') {
   return img;
 }
 
+// ---------- filters & sorting ----------
+const PREF = 'songs-view-v1';
+let view = { filter: 'all', sort: 'newest' };
+try { Object.assign(view, JSON.parse(localStorage.getItem(PREF)) || {}); } catch {}
+const saveView = () => { try { localStorage.setItem(PREF, JSON.stringify(view)); } catch {} };
+
+const allTags = () => {
+  const seen = new Map();
+  data.songs.forEach((s) => (s.tags || []).forEach((t) => {
+    const k = t.toLowerCase();
+    if (!seen.has(k)) seen.set(k, t);
+  }));
+  return [...seen.values()].sort((a, b) => a.localeCompare(b));
+};
+const hasTag = (s, t) => (s.tags || []).some((x) => x.toLowerCase() === t.toLowerCase());
+
+function filtered() {
+  // songs.json order = order added, so "newest" is the reverse of the file.
+  let list = playable().map((s, i) => ({ s, i }));
+  if (view.filter !== 'all') list = list.filter(({ s }) => hasTag(s, view.filter));
+  if (view.sort === 'newest') list.sort((a, b) => b.i - a.i);
+  if (view.sort === 'oldest') list.sort((a, b) => a.i - b.i);
+  if (view.sort === 'title' || view.sort === 'category') list.sort((a, b) => a.s.title.localeCompare(b.s.title));
+  return list.map(({ s }) => s);
+}
+
+function renderChips() {
+  const box = $('#chips');
+  box.replaceChildren();
+  const tags = allTags();
+  if (view.filter !== 'all' && !tags.some((t) => t.toLowerCase() === view.filter.toLowerCase())) view.filter = 'all';
+  ['all', ...tags].forEach((t) => {
+    const on = t.toLowerCase() === view.filter.toLowerCase();
+    const b = el('button', { className: 'chip' + (on ? ' on' : ''), textContent: t === 'all' ? 'All songs' : t });
+    b.setAttribute('aria-pressed', on);
+    b.onclick = () => { view.filter = t; saveView(); renderSongs(); };
+    box.append(b);
+  });
+  $('#sort').value = view.sort;
+}
+$('#sort').onchange = (e) => { view.sort = e.target.value; saveView(); renderSongs(); };
+
+// ---------- song rows ----------
 function songRow(song, list) {
   const tags = (song.tags || []).map((t) => el('span', { className: 'tag', textContent: t }));
-  const main = el('button', { className: 'main' },
-    coverImg(song),
-    el('div', { style: 'min-width:0' },
-      el('div', { className: 'title', textContent: song.title }),
-      el('div', { className: 'meta' }, tags.length ? tags : 'Tap to play'))
-  );
+  const text = el('div', { style: 'min-width:0;flex:1' },
+    el('div', { className: 'title', textContent: song.title }));
+  if (song.description) text.append(el('div', { className: 'desc', textContent: song.description }));
+  if (tags.length) text.append(el('div', { className: 'meta', style: 'margin-top:4px' }, tags));
+  else if (!song.description) text.append(el('div', { className: 'meta', textContent: 'Tap to play' }));
+
+  const main = el('button', { className: 'main' }, coverImg(song), text);
   main.onclick = () => playList(list, list.indexOf(song));
 
   const yt = el('a', {
@@ -54,15 +98,44 @@ function songRow(song, list) {
   });
   const li = el('li', { className: 'row' }, main, yt);
   li.dataset.id = song.id;
+
+  // "more" toggle for long descriptions
+  if (song.description && song.description.length > 80) {
+    const more = el('span', { className: 'more', textContent: 'More', role: 'button', tabIndex: 0 });
+    more.onclick = (e) => {
+      e.stopPropagation();
+      li.classList.toggle('expanded');
+      more.textContent = li.classList.contains('expanded') ? 'Less' : 'More';
+    };
+    text.insertBefore(more, text.children[2] || null);
+  }
   return li;
 }
 
 function renderSongs() {
-  const ul = $('#song-list');
-  ul.replaceChildren();
-  const list = playable();
-  if (!list.length) ul.append(el('li', { className: 'empty', textContent: 'No songs yet.' }));
-  list.forEach((s) => ul.append(songRow(s, list)));
+  renderChips();
+  const box = $('#song-list');
+  box.replaceChildren();
+  const list = filtered();
+  $('#count').textContent = `${list.length} song${list.length === 1 ? '' : 's'}`;
+  if (!list.length) { box.append(el('p', { className: 'empty', textContent: 'No songs here yet.' })); return; }
+
+  if (view.sort === 'category') {
+    const groups = view.filter === 'all' ? [...allTags(), null] : [view.filter];
+    groups.forEach((g) => {
+      const songs = list.filter((s) => (g ? hasTag(s, g) : !(s.tags || []).length));
+      if (!songs.length) return;
+      box.append(el('h3', { className: 'group-title', textContent: g || 'Uncategorized' }));
+      const ul = el('ul', { className: 'list' });
+      songs.forEach((s) => ul.append(songRow(s, songs)));
+      box.append(ul);
+    });
+  } else {
+    const ul = el('ul', { className: 'list' });
+    list.forEach((s) => ul.append(songRow(s, list)));
+    box.append(ul);
+  }
+  markPlaying();
 }
 
 function resolvePlaylist(p) {
@@ -155,8 +228,8 @@ const prev = () => {
 $('#toggle').onclick = () => (audio.paused ? audio.play() : audio.pause());
 $('#next').onclick = next;
 $('#prev').onclick = prev;
-$('#play-all').onclick = () => playList(playable(), 0);
-$('#shuffle-all').onclick = () => playList(shuffle(playable()), 0);
+$('#play-all').onclick = () => playList(filtered(), 0);
+$('#shuffle-all').onclick = () => playList(shuffle(filtered()), 0);
 
 audio.addEventListener('play', () => { $('#toggle').textContent = '⏸'; });
 audio.addEventListener('pause', () => { $('#toggle').textContent = '▶'; });
@@ -200,6 +273,49 @@ async function boot() {
   renderPlaylists();
 }
 boot();
+
+// ---------- install prompt ----------
+// Android/desktop Chrome & Edge: real "Install" button via beforeinstallprompt.
+// iPhone/iPad: Apple doesn't allow an install popup, so show how to do it by hand.
+const INSTALL_KEY = 'songs-install-dismissed';
+const isInstalled = () =>
+  window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+const dismissedRecently = () => {
+  try { return Date.now() - Number(localStorage.getItem(INSTALL_KEY) || 0) < 7 * 864e5; } catch { return false; }
+};
+const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent) ||
+  (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+let deferredInstall = null;
+
+function showInstall(mode) {
+  if (isInstalled() || dismissedRecently()) return;
+  const banner = $('#install-banner');
+  if (mode === 'ios') {
+    $('#install-help').textContent = 'Tap the Share button, then "Add to Home Screen".';
+    $('#install-btn').hidden = true;
+  } else {
+    $('#install-btn').hidden = false;
+  }
+  banner.hidden = false;
+}
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredInstall = e;
+  showInstall('prompt');
+});
+$('#install-btn').onclick = async () => {
+  if (!deferredInstall) return;
+  deferredInstall.prompt();
+  await deferredInstall.userChoice.catch(() => {});
+  deferredInstall = null;
+  $('#install-banner').hidden = true;
+};
+$('#install-close').onclick = () => {
+  $('#install-banner').hidden = true;
+  try { localStorage.setItem(INSTALL_KEY, String(Date.now())); } catch {}
+};
+window.addEventListener('appinstalled', () => { $('#install-banner').hidden = true; });
+if (isIOS) showInstall('ios');
 
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));

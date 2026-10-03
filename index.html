@@ -23,12 +23,34 @@
   </header>
 
   <main>
-    <section id="view-songs" class="view">
-      <div class="actions">
-        <button id="play-all" class="pill">▶ Play all</button>
-        <button id="shuffle-all" class="pill">⤮ Shuffle</button>
+    <div id="install-banner" class="install" hidden>
+      <img src="icons/icon-192.png" alt="" class="install-icon">
+      <div class="install-text">
+        <strong>Install Craig's Songs</strong>
+        <span id="install-help">Add it to your home screen for one-tap listening.</span>
       </div>
-      <ul id="song-list" class="list"></ul>
+      <button id="install-btn" class="install-go">Install</button>
+      <button id="install-close" class="install-x" aria-label="Not now">✕</button>
+    </div>
+
+    <section id="view-songs" class="view">
+      <div class="filters">
+        <div id="chips" class="chips" role="group" aria-label="Filter by category"></div>
+        <label class="sort">Sort
+          <select id="sort">
+            <option value="newest">Newest</option>
+            <option value="oldest">Oldest</option>
+            <option value="title">Title A–Z</option>
+            <option value="category">By category</option>
+          </select>
+        </label>
+      </div>
+      <div class="actions">
+        <button id="play-all" class="pill">▶ Play these</button>
+        <button id="shuffle-all" class="pill">⤮ Shuffle</button>
+        <span id="count" class="count"></span>
+      </div>
+      <div id="song-list"></div>
     </section>
 
     <section id="view-playlists" class="view" hidden>

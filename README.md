@@ -32,7 +32,7 @@ Or edit `songs.json` by hand and drop the MP3 into `music/`.
 
 ## songs.json
 
-- `songs`: each has `title`, `file` (MP3 path), `youtube` (lyric video link), optional `cover` image and `tags`.
+- `songs`: each has `title`, `file` (MP3 path), `youtube` (lyric video link), and optional `description`, `cover` image and `tags` (categories like Family, Friends — these become the filter buttons). Order in the file = order added (used for Newest/Oldest sort).
 - `playlists`: in-app playlists. `"songs": "all"` or a list of song ids, e.g. `["good-dog-titus", "the-right-craig"]`.
 - `youtubePlaylists`: links to unlisted YouTube playlists.
 

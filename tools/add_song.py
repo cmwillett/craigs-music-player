@@ -2,7 +2,7 @@
 """Add a song to the app.
 
 Usage:
-  python tools/add_song.py "path/to/Song.mp3" --title "Song Title" [--youtube URL] [--cover path/to/art.jpg] [--tags Family Golf]
+  python tools/add_song.py "path/to/Song.mp3" --title "Song Title" [--youtube URL] [--cover path/to/art.jpg] [--tags Family Golf] [--description "Short blurb"]
 
 Copies the MP3 (and cover art) into the repo with a clean filename and adds the
 entry to songs.json. If a song with the same id exists, it is updated instead.
@@ -22,6 +22,7 @@ def main():
     p.add_argument('--youtube', default=None)
     p.add_argument('--cover', default=None)
     p.add_argument('--tags', nargs='*', default=None)
+    p.add_argument('--description', default=None)
     a = p.parse_args()
 
     sid = slug(a.title)
@@ -40,6 +41,8 @@ def main():
         song['cover'] = f'covers/{sid}{ext}'
     if a.youtube is not None:
         song['youtube'] = a.youtube
+    if a.description is not None:
+        song['description'] = a.description
     if a.tags is not None:
         song['tags'] = a.tags
 

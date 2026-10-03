@@ -55,6 +55,38 @@ main { padding: 4px 16px; max-width: 720px; margin: 0 auto; }
 .cover.small { width: 44px; height: 44px; }
 .empty { color: var(--muted); padding: 10px 2px; }
 
+/* filters */
+.filters { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-top: 8px; }
+.chips { display: flex; gap: 6px; overflow-x: auto; flex: 1 1 260px; padding-bottom: 2px; scrollbar-width: none; }
+.chips::-webkit-scrollbar { display: none; }
+.chip { flex: none; padding: 6px 14px; border-radius: 999px; background: var(--card); color: var(--muted); font-size: .9rem; }
+.chip.on { background: var(--text); color: var(--bg); font-weight: 600; }
+.sort { color: var(--muted); font-size: .85rem; display: flex; align-items: center; gap: 6px; }
+.sort select { background: var(--card); color: var(--text); border: 0; border-radius: 8px; padding: 6px 8px; font: inherit; }
+.count { margin-left: auto; align-self: center; color: var(--muted); font-size: .85rem; }
+.group-title { margin: 18px 0 8px; color: var(--accent); font-size: .95rem; font-weight: 700; }
+
+/* descriptions */
+.row .desc {
+  color: var(--muted); font-size: .85rem; margin-top: 2px;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+.row.expanded .desc { -webkit-line-clamp: unset; display: block; }
+.row .more { color: var(--accent); font-size: .8rem; padding: 2px 0 0; }
+
+/* install banner */
+.install {
+  display: flex; align-items: center; gap: 10px;
+  background: var(--card-2); border-radius: var(--radius); padding: 10px 12px; margin: 8px 0 4px;
+}
+.install[hidden] { display: none; }
+.install-icon { width: 40px; height: 40px; border-radius: 10px; flex: none; }
+.install-text { flex: 1; min-width: 0; display: flex; flex-direction: column; font-size: .85rem; color: var(--muted); }
+.install-text strong { color: var(--text); font-size: .95rem; }
+.install-go { background: var(--accent); color: var(--accent-ink); font-weight: 700; padding: 8px 14px; border-radius: 10px; }
+.install-go[hidden] { display: none; }
+.install-x { color: var(--muted); padding: 6px; }
+
 .player {
   position: fixed; left: 0; right: 0; bottom: 0; z-index: 10;
   background: var(--card-2);

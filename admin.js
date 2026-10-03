@@ -167,6 +167,8 @@ $('#add-save').onclick = async () => {
     song.title = title;
     song.file = `music/${id}.mp3`;
     song.youtube = $('#add-yt').value.trim() || song.youtube || '';
+    const desc = $('#add-desc').value.trim();
+    if (desc) song.description = desc;
     const tags = tagsFrom($('#add-tags').value);
     if (tags.length) song.tags = tags;
     const files = [{ path: song.file, base64: await fileB64(mp3) }];
@@ -177,14 +179,30 @@ $('#add-save').onclick = async () => {
     }
     files.push({ path: 'songs.json', text: json(data) });
     await commit(`Add song: ${title}`, files);
-    ['#add-title', '#add-mp3', '#add-yt', '#add-cover', '#add-tags'].forEach((s) => { $(s).value = ''; });
+    ['#add-title', '#add-desc', '#add-mp3', '#add-yt', '#add-cover', '#add-tags'].forEach((s) => { $(s).value = ''; });
     say('#add-msg', `Added "${title}". It'll show up in about a minute.`, 'ok');
     await refresh();
   } catch (e) { say('#add-msg', e.message, 'err'); }
   btn.disabled = false;
 };
 
+// Tap an existing category to add it, so spelling stays consistent ("Family" vs "family").
+function fillPicks(box, input, data) {
+  const tags = [...new Set(data.songs.flatMap((s) => s.tags || []))].sort();
+  box.replaceChildren();
+  tags.forEach((t) => {
+    const b = document.createElement('button');
+    b.type = 'button'; b.textContent = '+ ' + t;
+    b.onclick = () => {
+      const cur = tagsFrom(input.value);
+      if (!cur.some((x) => x.toLowerCase() === t.toLowerCase())) input.value = [...cur, t].join(', ');
+    };
+    box.append(b);
+  });
+}
+
 function renderEdit(data) {
+  fillPicks(document.querySelector('.tag-picks[data-for=add-tags]'), $('#add-tags'), data);
   const ul = $('#edit-list');
   ul.replaceChildren();
   data.songs.forEach((song) => {
@@ -193,8 +211,10 @@ function renderEdit(data) {
       <details class="edit-row">
         <summary></summary>
         <label>Title</label><input class="e-title" type="text">
+        <label>Short description</label><textarea class="e-desc" rows="2" maxlength="300"></textarea>
         <label>YouTube lyric video</label><input class="e-yt" type="url" placeholder="https://youtu.be/…">
-        <label>Tags (comma separated)</label><input class="e-tags" type="text">
+        <label>Categories (comma separated)</label><input class="e-tags" type="text">
+        <div class="tag-picks"></div>
         <label>Replace MP3 (optional)</label><input class="e-mp3" type="file" accept="audio/mpeg,.mp3">
         <label>Replace cover art (optional)</label><input class="e-cover" type="file" accept="image/*">
         <div class="btns"><button class="e-save">Save</button><button class="e-del danger">Delete</button></div>
@@ -205,6 +225,8 @@ function renderEdit(data) {
     q('.e-title').value = song.title;
     q('.e-yt').value = song.youtube || '';
     q('.e-tags').value = (song.tags || []).join(', ');
+    q('.e-desc').value = song.description || '';
+    fillPicks(q('.tag-picks'), q('.e-tags'), data);
     const msg = (t, k = '') => { q('.msg').textContent = t; q('.msg').className = 'msg ' + k; };
 
     q('.e-save').onclick = async () => {
@@ -216,6 +238,8 @@ function renderEdit(data) {
         s.title = q('.e-title').value.trim() || s.title;
         s.youtube = q('.e-yt').value.trim();
         s.tags = tagsFrom(q('.e-tags').value);
+        const d = q('.e-desc').value.trim();
+        if (d) s.description = d; else delete s.description;
         const files = [];
         const mp3 = q('.e-mp3').files[0], cover = q('.e-cover').files[0];
         if (mp3) { s.file = `music/${s.id}.mp3`; files.push({ path: s.file, base64: await fileB64(mp3) }); }
