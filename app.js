@@ -144,21 +144,29 @@ function resolvePlaylist(p) {
   return (p.songs || []).map((id) => byId[id]).filter(Boolean);
 }
 
+let openPlaylist = null; // key of the playlist being viewed
+const plKey = (p) => p.id || p.name;
+
 function renderPlaylists() {
   const ul = $('#app-playlists');
   ul.replaceChildren();
-  (data.playlists || []).forEach((p) => {
+  const lists = data.playlists || [];
+  if (!lists.length) ul.append(el('li', { className: 'empty', textContent: 'No playlists yet.' }));
+  lists.forEach((p) => {
     const songs = resolvePlaylist(p);
-    const play = el('button', { className: 'main' },
+    const open = el('button', { className: 'main' },
       el('div', { className: 'cover' }),
       el('div', {},
         el('div', { className: 'title', textContent: p.name }),
         el('div', { className: 'meta', textContent: `${songs.length} song${songs.length === 1 ? '' : 's'}` })));
+    open.onclick = () => showPlaylist(plKey(p));
+    const play = el('button', { className: 'pill', textContent: '▶', title: 'Play' });
     play.onclick = () => playList(songs, 0);
-    const shuf = el('button', { className: 'pill', textContent: '⤮' , title: 'Shuffle' });
+    const shuf = el('button', { className: 'pill', textContent: '⤮', title: 'Shuffle' });
     shuf.onclick = () => playList(shuffle(songs), 0);
-    ul.append(el('li', { className: 'row' }, play, shuf));
+    ul.append(el('li', { className: 'row' }, open, play, shuf));
   });
+  renderPlaylistDetail();
 
   const yt = $('#yt-playlists');
   yt.replaceChildren();
@@ -172,6 +180,30 @@ function renderPlaylists() {
     yt.append(el('li', {}, a));
   });
 }
+
+function showPlaylist(key) {
+  openPlaylist = key;
+  renderPlaylistDetail();
+  window.scrollTo(0, 0);
+}
+
+function renderPlaylistDetail() {
+  const p = (data.playlists || []).find((x) => plKey(x) === openPlaylist);
+  $('#playlist-index').hidden = !!p;
+  $('#playlist-detail').hidden = !p;
+  if (!p) { openPlaylist = null; return; }
+  const songs = resolvePlaylist(p);
+  $('#pl-name').textContent = p.name;
+  $('#pl-count').textContent = `${songs.length} song${songs.length === 1 ? '' : 's'}`;
+  $('#pl-play').onclick = () => playList(songs, 0);
+  $('#pl-shuffle').onclick = () => playList(shuffle(songs), 0);
+  const ul = $('#pl-songs');
+  ul.replaceChildren();
+  if (!songs.length) ul.append(el('li', { className: 'empty', textContent: 'This playlist is empty.' }));
+  songs.forEach((s) => ul.append(songRow(s, songs)));
+  markPlaying();
+}
+$('#pl-back').onclick = () => { openPlaylist = null; renderPlaylistDetail(); };
 
 function markPlaying() {
   const id = queue[index]?.id;
@@ -256,10 +288,12 @@ document.querySelectorAll('.tab').forEach((t) => {
   t.onclick = () => {
     document.querySelectorAll('.tab').forEach((x) => x.classList.toggle('active', x === t));
     document.querySelectorAll('.view').forEach((v) => { v.hidden = v.id !== `view-${t.dataset.view}`; });
+    if (t.dataset.view === 'playlists') { openPlaylist = null; renderPlaylistDetail(); }
   };
 });
 
 // ---------- boot ----------
+if (typeof APP_VERSION !== 'undefined') $('#app-version').textContent = 'v' + APP_VERSION;
 async function boot() {
   try {
     const res = await fetch('songs.json', { cache: 'no-cache' });

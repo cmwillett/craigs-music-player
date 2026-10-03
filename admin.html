@@ -40,6 +40,12 @@
     .edit-row summary { font-weight: 600; cursor: pointer; }
     .tag-picks { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
     .tag-picks button { padding: 4px 10px; border-radius: 999px; background: var(--card-2); font-size: .8rem; color: var(--muted); }
+    .pl-songs { list-style: none; padding: 0; margin: 8px 0 0; display: grid; gap: 6px; }
+    .pl-songs li { display: flex; align-items: center; gap: 6px; background: var(--bg); border-radius: 10px; padding: 6px 8px; }
+    .pl-songs li span { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .pl-songs li button { width: 34px; height: 34px; border-radius: 8px; background: var(--card-2); }
+    .pl-add, .edit-row select { width: 100%; margin-top: 8px; padding: 12px; border-radius: 10px; border: 1px solid #3a3f4c; background: var(--bg); color: var(--text); font: inherit; }
+    .check { display: flex; align-items: center; gap: 8px; margin-top: 12px; color: var(--text); font-size: .95rem; }
     .btns { display: flex; gap: 8px; margin-top: 12px; }
     .btns button { flex: 1; padding: 10px; border-radius: 10px; background: var(--card-2); font-weight: 600; }
   </style>
@@ -97,6 +103,10 @@
 
       <h2>Edit songs</h2>
       <ul id="edit-list" class="list"></ul>
+
+      <h2>Playlists</h2>
+      <ul id="pl-edit-list" class="list"></ul>
+      <button id="pl-new" class="primary" style="margin-top:8px;background:var(--card-2);color:var(--text)">+ New playlist</button>
 
       <div class="card">
         <h2 style="margin-top:0;color:var(--text)">YouTube playlists</h2>

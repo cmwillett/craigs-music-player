@@ -55,10 +55,22 @@
     </section>
 
     <section id="view-playlists" class="view" hidden>
-      <h2>In this app</h2>
-      <ul id="app-playlists" class="list"></ul>
-      <h2>On YouTube <span class="sub">(videos with lyrics)</span></h2>
-      <ul id="yt-playlists" class="list"></ul>
+      <div id="playlist-index">
+        <h2>Playlists</h2>
+        <ul id="app-playlists" class="list"></ul>
+        <h2>On YouTube <span class="sub">(videos with lyrics)</span></h2>
+        <ul id="yt-playlists" class="list"></ul>
+      </div>
+      <div id="playlist-detail" hidden>
+        <button id="pl-back" class="back">← All playlists</button>
+        <h2 id="pl-name" class="pl-name"></h2>
+        <div class="actions">
+          <button id="pl-play" class="pill">▶ Play</button>
+          <button id="pl-shuffle" class="pill">⤮ Shuffle</button>
+          <span id="pl-count" class="count"></span>
+        </div>
+        <ul id="pl-songs" class="list"></ul>
+      </div>
     </section>
   </main>
 

@@ -113,3 +113,8 @@ main { padding: 4px 16px; max-width: 720px; margin: 0 auto; }
 }
 .corner-link:hover { color: var(--text); }
 .top h1 { padding-right: 110px; }
+
+/* playlist detail */
+.back { color: var(--accent); font-weight: 600; padding: 8px 0; }
+.pl-name { color: var(--text); font-size: 1.4rem; margin: 4px 0 8px; }
+.row .pill { flex: none; padding: 10px 14px; }

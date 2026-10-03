@@ -179,6 +179,7 @@ function renderPending() {
 function render() {
   const data = draft();
   renderEdit(data);
+  renderPlaylistEditors(data);
   $('#yt-lists').value = (data.youtubePlaylists || []).map((p) => `${p.name} | ${p.url}`).join('\n');
   renderPending();
 }
@@ -363,6 +364,124 @@ function renderEdit(data) {
     ul.append(li);
   });
 }
+
+// ---------- in-app playlists ----------
+let newPlaylist = null; // an unsaved "New playlist" editor that's open
+
+function playlistEditor(p, data, isNew) {
+  const key = p.id || p.name;
+  const stableId = p.id || slug(p.name) || 'playlist-' + Date.now();
+  let picked = p.songs === 'all' ? [] : [...(p.songs || [])];
+  let all = p.songs === 'all';
+  const byId = Object.fromEntries(data.songs.map((s) => [s.id, s]));
+
+  const li = document.createElement('li');
+  li.innerHTML = `
+    <details class="edit-row">
+      <summary></summary>
+      <label>Playlist name</label><input class="p-name" type="text" placeholder="Road trip">
+      <label class="check"><input class="p-all" type="checkbox"> Every song (updates automatically)</label>
+      <div class="p-pick">
+        <ul class="pl-songs"></ul>
+        <select class="pl-add"></select>
+      </div>
+      <div class="btns"><button class="p-done">Done</button><button class="p-del danger">${isNew ? 'Cancel' : 'Delete'}</button></div>
+      <div class="msg"></div>
+    </details>`;
+  const q = (sel) => li.querySelector(sel);
+  const det = q('details');
+  det.dataset.id = 'pl:' + key;
+  const pending = ops.some((o) => o.id === 'pl:' + stableId);
+  q('summary').textContent = isNew ? 'New playlist' :
+    `${p.name} · ${p.songs === 'all' ? 'every song' : (p.songs || []).length + ' songs'}${pending ? ' · edited' : ''}`;
+  q('.p-name').value = p.name || '';
+  q('.p-all').checked = all;
+
+  function draw() {
+    q('.p-pick').hidden = all;
+    const ul = q('.pl-songs');
+    ul.replaceChildren();
+    picked.forEach((id, i) => {
+      const row = document.createElement('li');
+      const name = document.createElement('span');
+      name.textContent = byId[id]?.title || id;
+      const mk = (txt, label, fn, disabled) => {
+        const b = document.createElement('button');
+        b.type = 'button'; b.textContent = txt; b.setAttribute('aria-label', label); b.disabled = disabled;
+        b.onclick = () => { fn(); draw(); };
+        return b;
+      };
+      row.append(name,
+        mk('↑', 'Move up', () => { [picked[i - 1], picked[i]] = [picked[i], picked[i - 1]]; }, i === 0),
+        mk('↓', 'Move down', () => { [picked[i + 1], picked[i]] = [picked[i], picked[i + 1]]; }, i === picked.length - 1),
+        mk('✕', 'Remove', () => { picked.splice(i, 1); }, false));
+      ul.append(row);
+    });
+    const sel = q('.pl-add');
+    sel.replaceChildren(new Option(picked.length ? '+ Add another song…' : '+ Add a song…', ''));
+    data.songs.filter((s) => !picked.includes(s.id)).forEach((s) => sel.append(new Option(s.title, s.id)));
+    sel.onchange = () => { if (sel.value) { picked.push(sel.value); draw(); } };
+  }
+  q('.p-all').onchange = (e) => { all = e.target.checked; draw(); };
+  draw();
+
+  q('.p-done').onclick = () => {
+    const name = q('.p-name').value.trim();
+    if (!name) { q('.msg').textContent = 'Give the playlist a name.'; q('.msg').className = 'msg err'; return; }
+    const songs = all ? 'all' : [...picked];
+    const id = isNew ? (slug(name) || 'playlist') + '-' + Date.now().toString(36) : stableId;
+    ops.push({
+      id: 'pl:' + (isNew ? id : stableId),
+      label: `${isNew ? 'New' : 'Edit'} playlist "${name}"`,
+      apply: (d) => {
+        d.playlists = d.playlists || [];
+        let pl = d.playlists.find((x) => (x.id || x.name) === key || x.id === id);
+        if (!pl || isNew) { pl = { id }; d.playlists.push(pl); }
+        pl.id = pl.id || id;
+        pl.name = name;
+        pl.songs = songs;
+      },
+    });
+    if (isNew) newPlaylist = null;
+    det.open = false;
+    render();
+  };
+  q('.p-del').onclick = () => {
+    if (isNew) { newPlaylist = null; render(); return; }
+    if (!confirm(`Delete the playlist "${p.name}"? (The songs stay.)`)) return;
+    ops.push({
+      id: 'pl:' + stableId,
+      label: `Delete playlist "${p.name}"`,
+      apply: (d) => { d.playlists = (d.playlists || []).filter((x) => (x.id || x.name) !== key); },
+    });
+    render();
+  };
+  return li;
+}
+
+function renderPlaylistEditors(data) {
+  const ul = $('#pl-edit-list');
+  const open = new Set([...ul.querySelectorAll('details[open]')].map((d) => d.dataset.id));
+  ul.replaceChildren();
+  (data.playlists || []).forEach((p) => {
+    const li = playlistEditor(p, data, false);
+    if (open.has(li.querySelector('details').dataset.id)) li.querySelector('details').open = true;
+    ul.append(li);
+  });
+  if (newPlaylist) {
+    const li = playlistEditor({ name: '', songs: [] }, data, true);
+    li.querySelector('details').open = true;
+    ul.append(li);
+  }
+}
+
+$('#pl-new').onclick = () => {
+  if (newPlaylist) return;
+  newPlaylist = true;
+  renderPlaylistEditors(draft());
+  const last = $('#pl-edit-list').lastElementChild;
+  last?.querySelector('.p-name')?.focus();
+};
 
 $('#yt-save').onclick = () => {
   const lists = $('#yt-lists').value.split('\n').map((l) => l.split('|').map((x) => x.trim()))
