@@ -26,8 +26,11 @@
       "title": "Good Dog Titus",
       "file": "music/good-dog-titus.mp3",
       "cover": "",
-      "youtube": "",
-      "tags": []
+      "youtube": "https://www.youtube.com/watch?v=AQ4_I3tID5I",
+      "tags": [
+        "family"
+      ],
+      "description": "A song about our dog, Titus"
     },
     {
       "id": "grip-it-and-sip-it",
