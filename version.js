@@ -1,3 +1,3 @@
 // Bump this whenever you change the app. It shows on the main page and also
 // tells installed copies to refresh their cached files.
-const APP_VERSION = '1.8.0';
+const APP_VERSION = '1.8.1';

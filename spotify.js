@@ -25,6 +25,10 @@ const SP = (() => {
   let pollTimer = null;
   let tickTimer = null;
   let lastDevice = null;
+  let managing = false;     // showing the "choose playlists" checklist
+  const HIDDEN = 'spotify-hidden-v1';
+  let hidden = new Set();   // playlist URIs this person chose to hide (saved on this device)
+  const saveHidden = () => save(HIDDEN, [...hidden]);
 
   // ---------- helpers ----------
   const load = (k) => { try { return JSON.parse(localStorage.getItem(k)); } catch { return null; } };
@@ -316,20 +320,46 @@ const SP = (() => {
     list.replaceChildren();
     $('#sp-connect').hidden = !!auth;
     $('#sp-disconnect').hidden = !auth;
+    $('#sp-manage').hidden = !auth || !playlists || !playlists.length;
+    $('#sp-manage').textContent = managing ? 'Done' : 'Choose playlists';
+    $('#sp-manage').className = managing ? 'sp-btn' : 'sp-link';
+    $('#sp-disconnect').hidden = !auth || managing;
     if (!auth) {
       $('#my-sp-hint').textContent = 'Spotify Premium: connect once to play your own playlists here with full songs.';
       return;
     }
-    $('#my-sp-hint').textContent = 'Plays in the Spotify app on this device. Keep Spotify open in the background.';
+    $('#my-sp-hint').textContent = managing
+      ? 'Check the playlists you want to see here, then tap Done.'
+      : 'Plays in the Spotify app on this device. Keep Spotify open in the background.';
     if (!playlists) { list.append(el('li', { className: 'empty', textContent: 'Loading your playlists…' })); return; }
     if (!playlists.length) { list.append(el('li', { className: 'empty', textContent: 'No playlists found on your Spotify account.' })); return; }
-    playlists.forEach((p) => {
+    const shown = managing ? playlists : playlists.filter((p) => !hidden.has(p.uri));
+    if (!managing && !shown.length) {
+      list.append(el('li', { className: 'empty', textContent: 'All your Spotify playlists are hidden. Tap Choose playlists to show some.' }));
+    }
+    shown.forEach((p) => {
       const img = p.images?.slice(-1)[0]?.url || p.images?.[0]?.url;
       const cover = img ? el('img', { className: 'cover', src: img, alt: '', loading: 'lazy' }) : el('div', { className: 'cover sp-cover' });
       const count = p.tracks?.total ?? p.items?.total;
       const metaText = count != null ? `${count} song${count === 1 ? '' : 's'}` : (p.owner?.display_name || '');
       const main = el('button', { className: 'main' }, cover,
         el('div', {}, el('div', { className: 'title', textContent: p.name }), el('div', { className: 'meta sp-meta', textContent: metaText })));
+      if (managing) {
+        const box = el('input', { type: 'checkbox', className: 'sp-check', checked: !hidden.has(p.uri) });
+        box.setAttribute('aria-label', `Show ${p.name}`);
+        const flip = () => {
+          if (hidden.has(p.uri)) hidden.delete(p.uri); else hidden.add(p.uri);
+          saveHidden();
+          box.checked = !hidden.has(p.uri);
+          li.classList.toggle('sp-off', hidden.has(p.uri));
+          updateCount();
+        };
+        main.onclick = flip;
+        box.onclick = (e) => { e.stopPropagation(); flip(); box.checked = !hidden.has(p.uri); };
+        const li = el('li', { className: 'row' + (hidden.has(p.uri) ? ' sp-off' : '') }, main, box);
+        list.append(li);
+        return;
+      }
       main.onclick = () => {
         if (mode === 'spotify' && state?.context?.uri === p.uri) return control('toggle');
         playContext(p.uri);
@@ -341,7 +371,27 @@ const SP = (() => {
       li.dataset.spMeta = metaText;
       list.append(li);
     });
+    if (managing) {
+      const bar = el('li', { className: 'sp-manage-bar' });
+      const all = el('button', { className: 'sp-link', textContent: 'Show all' });
+      all.onclick = () => { hidden.clear(); saveHidden(); render(); };
+      const none = el('button', { className: 'sp-link', textContent: 'Hide all' });
+      none.onclick = () => { playlists.forEach((p) => hidden.add(p.uri)); saveHidden(); render(); };
+      bar.append(el('span', { id: 'sp-count' }), all, none);
+      list.prepend(bar);
+      updateCount();
+    } else if (hidden.size && playlists.some((p) => hidden.has(p.uri))) {
+      const n = playlists.filter((p) => hidden.has(p.uri)).length;
+      list.append(el('li', { className: 'sp-hidden-note', textContent: `${n} playlist${n === 1 ? '' : 's'} hidden` }));
+    }
     markSpotify();
+  }
+
+  function updateCount() {
+    const c = $('#sp-count');
+    if (!c || !playlists) return;
+    const n = playlists.filter((p) => !hidden.has(p.uri)).length;
+    c.textContent = `Showing ${n} of ${playlists.length}`;
   }
 
   // ---------- public ----------
@@ -349,6 +399,8 @@ const SP = (() => {
     async init(d) {
       clientId = (d.spotify && d.spotify.clientId) || '';
       auth = load(STORE);
+      hidden = new Set(load(HIDDEN) || []);
+      $('#sp-manage').onclick = () => { managing = !managing; render(); };
       $('#sp-connect').onclick = () => connect();
       $('#sp-disconnect').onclick = () => { if (confirm('Disconnect Spotify on this device?')) disconnect(); };
       if (!clientId) { render(); return; }
