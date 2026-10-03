@@ -50,7 +50,7 @@
       "id": "they-call-him-slim",
       "title": "They Call Him Slim",
       "file": "music/they-call-him-slim.mp3",
-      "cover": "",
+      "cover": "covers/they-call-him-slim.jpg",
       "youtube": "https://www.youtube.com/watch?v=XPD3CnGnmy4",
       "tags": [
         "friends"
@@ -61,7 +61,7 @@
       "id": "here-comes-big-sexy",
       "title": "Here Comes Big Sexy",
       "file": "music/here-comes-big-sexy.mp3",
-      "cover": "",
+      "cover": "covers/here-comes-big-sexy.png",
       "youtube": "https://www.youtube.com/watch?v=-nv_GV_ld_E",
       "tags": [
         "friends"
