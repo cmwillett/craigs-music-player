@@ -37,6 +37,7 @@ const stored = () => { try { return JSON.parse(localStorage.getItem(STORE)); } c
 // ---------- GitHub API ----------
 async function gh(path, opts = {}) {
   const res = await fetch(API + path, {
+    cache: 'no-store',
     ...opts,
     headers: {
       Authorization: `Bearer ${token}`,
@@ -141,15 +142,91 @@ $('#reset').onclick = () => {
   localStorage.removeItem(STORE); token = null;
   $('#setup-repo').value = guessRepo(); show('setup');
 };
-$('#lock-now').onclick = () => { token = null; show('lock'); };
+$('#lock-now').onclick = () => {
+  if (ops.length && !confirm('You have unsaved changes. Lock anyway and lose them?')) return;
+  ops = []; token = null; show('lock'); renderPending();
+};
 
-// ---------- admin actions ----------
-async function refresh() {
-  const data = await readSongs();
-  renderEdit(data);
-  $('#yt-lists').value = (data.youtubePlaylists || []).map((p) => `${p.name} | ${p.url}`).join('\n');
+// ---------- pending changes ----------
+// Edits are queued here and sent to GitHub together with "Save all" (one commit = one site rebuild).
+// Each change is replayed on top of the latest songs.json at save time, so nothing made
+// elsewhere in the meantime (e.g. the music-folder automation) gets overwritten.
+let current = null;  // songs.json as last loaded from GitHub
+let ops = [];        // [{ label, apply(data, ctx) }]
+
+const clone = (d) => JSON.parse(JSON.stringify(d));
+function replay(base, list = ops) {
+  const data = clone(base);
+  const ctx = { files: new Map(), deletes: new Set() };
+  list.forEach((op) => op.apply(data, ctx));
+  return { data, ctx };
+}
+const draft = () => replay(current).data;
+
+function queue(label, apply) {
+  ops.push({ label, apply });
+  render();
 }
 
+function renderPending() {
+  const bar = $('#pending');
+  bar.hidden = !ops.length;
+  $('#pending-count').textContent = `${ops.length} unsaved change${ops.length === 1 ? '' : 's'}`;
+  const ul = $('#pending-list');
+  ul.replaceChildren(...ops.map((o) => Object.assign(document.createElement('li'), { textContent: o.label })));
+}
+
+function render() {
+  const data = draft();
+  renderEdit(data);
+  $('#yt-lists').value = (data.youtubePlaylists || []).map((p) => `${p.name} | ${p.url}`).join('\n');
+  renderPending();
+}
+
+async function refresh() {
+  current = await readSongs();
+  render();
+}
+
+$('#save-all').onclick = async () => {
+  if (!ops.length) return;
+  const btn = $('#save-all'); btn.disabled = true; $('#discard').disabled = true;
+  try {
+    say('#pending-msg', 'Saving…');
+    const latest = await readSongs();
+    const { data, ctx } = replay(latest);
+    const files = [...ctx.files.entries()].map(([path, base64]) => ({ path, base64 }));
+    if (ctx.deletes.size) {
+      const tree = await gh(`/repos/${repo}/git/trees/${branch}?recursive=1`);
+      const exists = new Set(tree.tree.map((t) => t.path));
+      ctx.deletes.forEach((path) => { if (exists.has(path) && !ctx.files.has(path)) files.push({ path, delete: true }); });
+    }
+    files.push({ path: 'songs.json', text: json(data) });
+    const msg = ops.length === 1 ? ops[0].label : `${ops.length} changes: ` + ops.map((o) => o.label).join('; ');
+    await commit(msg.slice(0, 300), files);
+    current = data;
+    ops = [];
+    render();
+    say('#pending-msg', '');
+    const t = $('#toast');
+    t.textContent = 'Saved! The site will show it in about a minute.';
+    t.hidden = false;
+    setTimeout(() => { t.hidden = true; }, 5000);
+  } catch (e) { say('#pending-msg', e.message, 'err'); }
+  btn.disabled = false; $('#discard').disabled = false;
+};
+
+$('#discard').onclick = () => {
+  if (!confirm('Throw away all unsaved changes?')) return;
+  ops = [];
+  render();
+};
+
+window.addEventListener('beforeunload', (e) => {
+  if (ops.length) { e.preventDefault(); e.returnValue = ''; }
+});
+
+// ---------- admin actions ----------
 $('#add-save').onclick = async () => {
   const title = $('#add-title').value.trim();
   const mp3 = $('#add-mp3').files[0];
@@ -157,33 +234,29 @@ $('#add-save').onclick = async () => {
   if (!title) return say('#add-msg', 'Give the song a title.', 'err');
   if (!mp3) return say('#add-msg', 'Pick the MP3 file.', 'err');
   if (mp3.size > 50 * 1024 * 1024) return say('#add-msg', 'That MP3 is over 50 MB.', 'err');
-  const btn = $('#add-save'); btn.disabled = true;
-  try {
-    say('#add-msg', 'Uploading…');
-    const id = slug(title);
-    const data = await readSongs();
+  const id = slug(title);
+  const fields = {
+    youtube: $('#add-yt').value.trim(),
+    description: $('#add-desc').value.trim(),
+    tags: tagsFrom($('#add-tags').value),
+  };
+  const mp3B64 = await fileB64(mp3);
+  const coverExt = cover ? (cover.name.split('.').pop() || 'jpg').toLowerCase() : null;
+  const coverB64 = cover ? await fileB64(cover) : null;
+
+  queue(`Add "${title}"`, (data, ctx) => {
     let song = data.songs.find((s) => s.id === id);
     if (!song) { song = { id, title, file: '', cover: '', youtube: '', tags: [] }; data.songs.push(song); }
     song.title = title;
     song.file = `music/${id}.mp3`;
-    song.youtube = $('#add-yt').value.trim() || song.youtube || '';
-    const desc = $('#add-desc').value.trim();
-    if (desc) song.description = desc;
-    const tags = tagsFrom($('#add-tags').value);
-    if (tags.length) song.tags = tags;
-    const files = [{ path: song.file, base64: await fileB64(mp3) }];
-    if (cover) {
-      const ext = (cover.name.split('.').pop() || 'jpg').toLowerCase();
-      song.cover = `covers/${id}.${ext}`;
-      files.push({ path: song.cover, base64: await fileB64(cover) });
-    }
-    files.push({ path: 'songs.json', text: json(data) });
-    await commit(`Add song: ${title}`, files);
-    ['#add-title', '#add-desc', '#add-mp3', '#add-yt', '#add-cover', '#add-tags'].forEach((s) => { $(s).value = ''; });
-    say('#add-msg', `Added "${title}". It'll show up in about a minute.`, 'ok');
-    await refresh();
-  } catch (e) { say('#add-msg', e.message, 'err'); }
-  btn.disabled = false;
+    ctx.files.set(song.file, mp3B64);
+    if (fields.youtube) song.youtube = fields.youtube;
+    if (fields.description) song.description = fields.description;
+    if (fields.tags.length) song.tags = fields.tags;
+    if (coverB64) { song.cover = `covers/${id}.${coverExt}`; ctx.files.set(song.cover, coverB64); }
+  });
+  ['#add-title', '#add-desc', '#add-mp3', '#add-yt', '#add-cover', '#add-tags'].forEach((sel) => { $(sel).value = ''; });
+  say('#add-msg', `"${title}" added to your changes. Tap Save all when you're done.`, 'ok');
 };
 
 // Tap an existing category to add it, so spelling stays consistent ("Family" vs "family").
@@ -204,6 +277,7 @@ function fillPicks(box, input, data) {
 function renderEdit(data) {
   fillPicks(document.querySelector('.tag-picks[data-for=add-tags]'), $('#add-tags'), data);
   const ul = $('#edit-list');
+  const open = new Set([...ul.querySelectorAll('details[open]')].map((d) => d.dataset.id));
   ul.replaceChildren();
   data.songs.forEach((song) => {
     const li = document.createElement('li');
@@ -217,11 +291,14 @@ function renderEdit(data) {
         <div class="tag-picks"></div>
         <label>Replace MP3 (optional)</label><input class="e-mp3" type="file" accept="audio/mpeg,.mp3">
         <label>Replace cover art (optional)</label><input class="e-cover" type="file" accept="image/*">
-        <div class="btns"><button class="e-save">Save</button><button class="e-del danger">Delete</button></div>
+        <div class="btns"><button class="e-save">Done</button><button class="e-del danger">Delete</button></div>
         <div class="msg"></div>
       </details>`;
-    const q = (s) => li.querySelector(s);
-    q('summary').textContent = song.title + (song.youtube ? '' : '  · no video link');
+    const q = (sel) => li.querySelector(sel);
+    q('details').dataset.id = song.id;
+    if (open.has(song.id)) q('details').open = true;
+    const pendingHere = ops.some((o) => o.id === song.id);
+    q('summary').textContent = song.title + (pendingHere ? '  · edited' : '') + (song.youtube ? '' : '  · no video link');
     q('.e-title').value = song.title;
     q('.e-yt').value = song.youtube || '';
     q('.e-tags').value = (song.tags || []).join(', ');
@@ -230,63 +307,68 @@ function renderEdit(data) {
     const msg = (t, k = '') => { q('.msg').textContent = t; q('.msg').className = 'msg ' + k; };
 
     q('.e-save').onclick = async () => {
-      try {
-        msg('Saving…');
-        const fresh = await readSongs();
-        const s = fresh.songs.find((x) => x.id === song.id);
-        if (!s) throw new Error('That song was removed.');
-        s.title = q('.e-title').value.trim() || s.title;
-        s.youtube = q('.e-yt').value.trim();
-        s.tags = tagsFrom(q('.e-tags').value);
-        const d = q('.e-desc').value.trim();
-        if (d) s.description = d; else delete s.description;
-        const files = [];
-        const mp3 = q('.e-mp3').files[0], cover = q('.e-cover').files[0];
-        if (mp3) { s.file = `music/${s.id}.mp3`; files.push({ path: s.file, base64: await fileB64(mp3) }); }
-        if (cover) {
-          const ext = (cover.name.split('.').pop() || 'jpg').toLowerCase();
-          if (s.cover && s.cover !== `covers/${s.id}.${ext}`) files.push({ path: s.cover, delete: true });
-          s.cover = `covers/${s.id}.${ext}`;
-          files.push({ path: s.cover, base64: await fileB64(cover) });
-        }
-        files.push({ path: 'songs.json', text: json(fresh) });
-        await commit(`Update song: ${s.title}`, files);
-        msg('Saved.', 'ok');
-        await refresh();
-      } catch (e) { msg(e.message, 'err'); }
+      const title = q('.e-title').value.trim();
+      const youtube = q('.e-yt').value.trim();
+      const tags = tagsFrom(q('.e-tags').value);
+      const description = q('.e-desc').value.trim();
+      const mp3 = q('.e-mp3').files[0], cover = q('.e-cover').files[0];
+      const changed = title !== song.title || youtube !== (song.youtube || '') ||
+        description !== (song.description || '') || tags.join('|') !== (song.tags || []).join('|') || mp3 || cover;
+      if (!changed) { q('details').open = false; return; }
+      msg('Adding to your changes…');
+      const mp3B64 = mp3 ? await fileB64(mp3) : null;
+      const coverExt = cover ? (cover.name.split('.').pop() || 'jpg').toLowerCase() : null;
+      const coverB64 = cover ? await fileB64(cover) : null;
+      const id = song.id;
+      ops.push({
+        id,
+        label: `Edit "${title || song.title}"`,
+        apply: (d, ctx) => {
+          const s = d.songs.find((x) => x.id === id);
+          if (!s) return; // removed elsewhere
+          if (title) s.title = title;
+          s.youtube = youtube;
+          s.tags = tags;
+          if (description) s.description = description; else delete s.description;
+          if (mp3B64) { s.file = s.file || `music/${id}.mp3`; ctx.files.set(s.file, mp3B64); }
+          if (coverB64) {
+            const path = `covers/${id}.${coverExt}`;
+            if (s.cover && s.cover !== path) ctx.deletes.add(s.cover);
+            s.cover = path;
+            ctx.files.set(path, coverB64);
+          }
+        },
+      });
+      q('details').open = false;
+      render();
     };
 
-    q('.e-del').onclick = async () => {
-      if (!confirm(`Delete "${song.title}" from the app?`)) return;
-      try {
-        msg('Deleting…');
-        const fresh = await readSongs();
-        const s = fresh.songs.find((x) => x.id === song.id);
-        fresh.songs = fresh.songs.filter((x) => x.id !== song.id);
-        (fresh.playlists || []).forEach((p) => { if (Array.isArray(p.songs)) p.songs = p.songs.filter((id) => id !== song.id); });
-        const files = [{ path: 'songs.json', text: json(fresh) }];
-        const tree = await gh(`/repos/${repo}/git/trees/${branch}?recursive=1`);
-        const exists = new Set(tree.tree.map((t) => t.path));
-        if (s?.file && exists.has(s.file)) files.push({ path: s.file, delete: true });
-        if (s?.cover && exists.has(s.cover)) files.push({ path: s.cover, delete: true });
-        await commit(`Delete song: ${song.title}`, files);
-        await refresh();
-      } catch (e) { msg(e.message, 'err'); }
+    q('.e-del').onclick = () => {
+      if (!confirm(`Delete "${song.title}" from the app? (Happens when you tap Save all.)`)) return;
+      const id = song.id;
+      ops.push({
+        id,
+        label: `Delete "${song.title}"`,
+        apply: (d, ctx) => {
+          const s = d.songs.find((x) => x.id === id);
+          if (!s) return;
+          d.songs = d.songs.filter((x) => x.id !== id);
+          (d.playlists || []).forEach((p) => { if (Array.isArray(p.songs)) p.songs = p.songs.filter((x) => x !== id); });
+          if (s.file) { ctx.files.delete(s.file); ctx.deletes.add(s.file); }
+          if (s.cover) { ctx.files.delete(s.cover); ctx.deletes.add(s.cover); }
+        },
+      });
+      render();
     };
     ul.append(li);
   });
 }
 
-$('#yt-save').onclick = async () => {
-  try {
-    say('#yt-msg', 'Saving…');
-    const lists = $('#yt-lists').value.split('\n').map((l) => l.split('|').map((x) => x.trim()))
-      .filter(([n, u]) => n && u).map(([name, url]) => ({ name, url }));
-    const data = await readSongs();
-    data.youtubePlaylists = lists;
-    await commit('Update YouTube playlists', [{ path: 'songs.json', text: json(data) }]);
-    say('#yt-msg', 'Saved.', 'ok');
-  } catch (e) { say('#yt-msg', e.message, 'err'); }
+$('#yt-save').onclick = () => {
+  const lists = $('#yt-lists').value.split('\n').map((l) => l.split('|').map((x) => x.trim()))
+    .filter(([n, u]) => n && u).map(([name, url]) => ({ name, url }));
+  queue('Update YouTube playlists', (d) => { d.youtubePlaylists = lists; });
+  say('#yt-msg', 'Added to your changes.', 'ok');
 };
 
 // ---------- boot ----------

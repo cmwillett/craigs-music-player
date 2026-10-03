@@ -9,7 +9,18 @@
   <link rel="icon" href="icons/icon-192.png">
   <link rel="stylesheet" href="styles.css">
   <style>
-    body { padding-bottom: 40px; }
+    body { padding-bottom: 180px; }
+    .pending { position: fixed; left: 0; right: 0; bottom: 0; z-index: 10; background: var(--card-2);
+      box-shadow: 0 -6px 20px rgba(0,0,0,.35); padding: 12px 16px calc(12px + env(safe-area-inset-bottom)); }
+    .pending[hidden], .toast[hidden] { display: none; }
+    .toast { position: fixed; left: 16px; right: 16px; bottom: calc(16px + env(safe-area-inset-bottom)); z-index: 11;
+      max-width: 480px; margin: 0 auto; background: #1f6f3a; color: #fff; padding: 12px 16px; border-radius: 12px; font-weight: 600; text-align: center; }
+    .pending-inner { max-width: 720px; margin: 0 auto; }
+    .pending summary { font-weight: 700; cursor: pointer; }
+    .pending ul { margin: 6px 0 0; padding-left: 20px; color: var(--muted); font-size: .9rem; max-height: 30vh; overflow: auto; }
+    .pending-btns { display: flex; gap: 8px; margin-top: 10px; }
+    .pending-btns .primary { margin-top: 0; flex: 2; }
+    .pending-btns #discard { flex: 1; border-radius: 12px; background: var(--card); font-weight: 600; }
     .card { background: var(--card); border-radius: var(--radius); padding: 16px; margin: 12px 0; }
     label { display: block; font-size: .85rem; color: var(--muted); margin: 12px 0 4px; }
     input[type=text], input[type=url], input[type=password], input[type=file], textarea {
@@ -80,7 +91,7 @@
         <label>Categories (optional, comma separated)</label>
         <input id="add-tags" type="text" placeholder="Family, Golf">
         <div class="tag-picks" data-for="add-tags"></div>
-        <button id="add-save" class="primary">Add song</button>
+        <button id="add-save" class="primary">Add to changes</button>
         <div id="add-msg" class="msg"></div>
       </div>
 
@@ -91,14 +102,29 @@
         <h2 style="margin-top:0;color:var(--text)">YouTube playlists</h2>
         <p class="hint">One per line: <code>Name | link</code></p>
         <textarea id="yt-lists" rows="4" style="width:100%;padding:12px;border-radius:10px;border:1px solid #3a3f4c;background:var(--bg);color:var(--text);font:inherit"></textarea>
-        <button id="yt-save" class="primary">Save playlists</button>
+        <button id="yt-save" class="primary">Add to changes</button>
         <div id="yt-msg" class="msg"></div>
       </div>
 
-      <p class="hint">Changes go live on the site in about a minute.
+      <p class="hint">Make as many edits as you like, then tap <strong>Save all</strong>. Changes go live on the site about a minute after saving.
         <button id="lock-now" class="link">Lock</button></p>
     </section>
   </main>
+
+  <div id="pending" class="pending" hidden>
+    <div class="pending-inner">
+      <details>
+        <summary id="pending-count"></summary>
+        <ul id="pending-list"></ul>
+      </details>
+      <div class="pending-btns">
+        <button id="discard">Discard</button>
+        <button id="save-all" class="primary">Save all</button>
+      </div>
+      <div id="pending-msg" class="msg"></div>
+    </div>
+  </div>
+  <div id="toast" class="toast" hidden></div>
 
   <script src="admin.js"></script>
 </body>
