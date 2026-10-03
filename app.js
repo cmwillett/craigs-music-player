@@ -77,7 +77,7 @@ function renderChips() {
 $('#sort').onchange = (e) => { view.sort = e.target.value; saveView(); renderSongs(); };
 
 // ---------- song rows ----------
-function songRow(song, list) {
+function songRow(song, list, src = null) {
   const tags = (song.tags || []).map((t) => el('span', { className: 'tag', textContent: t }));
   const text = el('div', { style: 'min-width:0;flex:1' },
     el('div', { className: 'title', textContent: song.title }));
@@ -86,7 +86,7 @@ function songRow(song, list) {
   else if (!song.description) text.append(el('div', { className: 'meta', textContent: 'Tap to play' }));
 
   const main = el('button', { className: 'main' }, coverImg(song), text);
-  main.onclick = () => playList(list, list.indexOf(song));
+  main.onclick = () => playList(list, list.indexOf(song), src);
 
   const yt = el('a', {
     className: 'yt' + (song.youtube ? '' : ' disabled'),
@@ -162,10 +162,17 @@ function renderPlaylists() {
         el('div', { className: 'meta', textContent: `${songs.length} song${songs.length === 1 ? '' : 's'}` })));
     open.onclick = () => showPlaylist(plKey(p));
     const play = el('button', { className: 'pill', textContent: '▶', title: 'Play' });
-    play.onclick = () => playList(songs, 0);
+    play.onclick = () => {
+      if (source === plKey(p)) { audio.paused ? audio.play() : audio.pause(); return; }
+      playList(songs, 0, plKey(p));
+    };
+    play.classList.add('pl-play');
     const shuf = el('button', { className: 'pill', textContent: '⤮', title: 'Shuffle' });
-    shuf.onclick = () => playList(shuffle(songs), 0);
-    ul.append(el('li', { className: 'row' }, open, play, shuf));
+    shuf.onclick = () => playList(shuffle(songs), 0, plKey(p));
+    const li = el('li', { className: 'row' }, open, play, shuf);
+    li.dataset.pl = plKey(p);
+    li.dataset.count = songs.length;
+    ul.append(li);
   });
   renderPlaylistDetail();
 
@@ -197,12 +204,12 @@ function renderPlaylistDetail() {
   const songs = resolvePlaylist(p);
   $('#pl-name').textContent = p.name;
   $('#pl-count').textContent = `${songs.length} song${songs.length === 1 ? '' : 's'}`;
-  $('#pl-play').onclick = () => playList(songs, 0);
-  $('#pl-shuffle').onclick = () => playList(shuffle(songs), 0);
+  $('#pl-play').onclick = () => playList(songs, 0, plKey(p));
+  $('#pl-shuffle').onclick = () => playList(shuffle(songs), 0, plKey(p));
   const ul = $('#pl-songs');
   ul.replaceChildren();
   if (!songs.length) ul.append(el('li', { className: 'empty', textContent: 'This playlist is empty.' }));
-  songs.forEach((s) => ul.append(songRow(s, songs)));
+  songs.forEach((s) => ul.append(songRow(s, songs, plKey(p))));
   markPlaying();
 }
 $('#pl-back').onclick = () => { openPlaylist = null; renderPlaylistDetail(); };
@@ -210,6 +217,33 @@ $('#pl-back').onclick = () => { openPlaylist = null; renderPlaylistDetail(); };
 function markPlaying() {
   const id = queue[index]?.id;
   document.querySelectorAll('.row[data-id]').forEach((r) => r.classList.toggle('playing', r.dataset.id === id));
+  // Highlight the playlist that's playing, with "Now playing · 2 of 5".
+  const paused = audio.paused;
+  document.querySelectorAll('.row[data-pl]').forEach((r) => {
+    const on = !!source && r.dataset.pl === source;
+    r.classList.toggle('playing', on);
+    const meta = r.querySelector('.meta');
+    const n = Number(r.dataset.count);
+    if (meta) {
+      meta.replaceChildren();
+      if (on) {
+        meta.append(el('span', { className: 'eq' + (paused ? ' paused' : '') }, el('i'), el('i'), el('i')),
+          `${paused ? 'Paused' : 'Now playing'} · ${index + 1} of ${queue.length}`);
+      } else meta.textContent = `${n} song${n === 1 ? '' : 's'}`;
+    }
+    const btn = r.querySelector('.pl-play');
+    if (btn) {
+      const playing = on && !paused;
+      btn.innerHTML = playing
+        ? '<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><rect x="6" y="5" width="4" height="14" rx="1" fill="currentColor"/><rect x="14" y="5" width="4" height="14" rx="1" fill="currentColor"/></svg>'
+        : '<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M8 5.5v13l11-6.5z" fill="currentColor"/></svg>';
+      btn.title = playing ? 'Pause' : 'Play';
+      btn.setAttribute('aria-label', btn.title);
+    }
+  });
+  const p = source && (data.playlists || []).find((x) => plKey(x) === source);
+  $('#np-source').textContent = p ? `from ${p.name}` : '';
+  $('#np-source').hidden = !p;
 }
 
 // ---------- YouTube player (in-app) ----------
@@ -267,8 +301,10 @@ $('#video-modal').addEventListener('click', (e) => { if (e.target.id === 'video-
 document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !$('#video-modal').hidden) closeVideo(); });
 
 // ---------- playback ----------
-function playList(list, i) {
+let source = null; // key of the playlist the queue came from (null = song list)
+function playList(list, i, src = null) {
   if (!list.length) return;
+  source = src;
   queue = list;
   load(i);
 }
@@ -319,8 +355,8 @@ $('#prev').onclick = prev;
 $('#play-all').onclick = () => playList(filtered(), 0);
 $('#shuffle-all').onclick = () => playList(shuffle(filtered()), 0);
 
-audio.addEventListener('play', () => { $('#toggle').textContent = '⏸'; });
-audio.addEventListener('pause', () => { $('#toggle').textContent = '▶'; });
+audio.addEventListener('play', () => { $('#toggle').textContent = '⏸'; markPlaying(); });
+audio.addEventListener('pause', () => { $('#toggle').textContent = '▶'; markPlaying(); });
 audio.addEventListener('ended', () => { if (index < queue.length - 1) next(); });
 audio.addEventListener('timeupdate', () => {
   const d = audio.duration || 0;
