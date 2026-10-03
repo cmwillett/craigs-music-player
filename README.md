@@ -17,7 +17,15 @@ Open the app → Playlists tab → **Admin** at the bottom (or go to `admin.html
 
 The token is saved only on that device, encrypted with your PIN. After that, just enter your PIN to add, edit or delete songs. Changes go live in about a minute.
 
-## Add a song from a computer
+## Add songs by dropping MP3s in the music folder
+
+Put the MP3 in `music/` (lowercase-with-dashes name, e.g. `boats-n-hoes.mp3`), commit and push.
+A GitHub automation (`.github/workflows/sync-songs.yml`) adds it to `songs.json` within a minute or two,
+with a title made from the filename. Fix the title and add a description, categories and YouTube link in the admin page.
+
+Deleting or renaming an MP3 removes its old entry. After the automation runs, click **Fetch origin → Pull** in GitHub Desktop before editing anything locally.
+
+## Add a song from a computer (script)
 
 1. Download the MP3 (and the MP4 for YouTube) from Suno. Both formats count as one download.
 2. Run:

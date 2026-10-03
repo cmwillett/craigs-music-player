@@ -1,0 +1,41 @@
+name: Add new songs to songs.json
+
+on:
+  push:
+    branches: [main]
+    paths: ['music/**']
+  workflow_dispatch:   # lets you run it by hand from the Actions tab
+
+permissions:
+  contents: write
+  pages: write
+
+concurrency:
+  group: sync-songs
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Add missing songs
+        run: python3 tools/sync_songs.py
+
+      - name: Commit if anything changed
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if git diff --quiet songs.json; then
+            echo "Nothing new."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add songs.json
+          git commit -m "Add new songs to songs.json"
+          git pull --rebase origin main
+          git push
+          # Make sure the site rebuilds with the new list.
+          gh api -X POST "repos/${{ github.repository }}/pages/builds" || true
