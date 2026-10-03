@@ -182,22 +182,8 @@
       "url": "https://www.youtube.com/playlist?list=PLRktkNm4WVoA"
     }
   ],
-  "spotifyPlaylists": [
-    {
-      "name": "Rock",
-      "url": "https://open.spotify.com/playlist/0vRUTfMTwQ7DbOHuzAhMrS?si=faaec566ae8f464e"
-    },
-    {
-      "name": "Party",
-      "url": "https://open.spotify.com/playlist/439LIq5oAifY6nbhz7RDla?si=61078b8101f04e06"
-    },
-    {
-      "name": "Gym Music",
-      "url": "https://open.spotify.com/playlist/14jXhmGzie0ZWWoF042Y6a?si=150e5dcfb8504aae&pt=8f93d16c42c22c4c72d9ab0a45504d1e"
-    },
-    {
-      "name": "Discover Weekly",
-      "url": "https://open.spotify.com/playlist/37i9dQZEVXcPxYJHxzvrTk?si=a09b7805901d4eca"
-    }
-  ]
+  "spotifyPlaylists": [],
+  "spotify": {
+    "clientId": "4e18f7c918b94391b7142a03470e1130"
+  }
 }
