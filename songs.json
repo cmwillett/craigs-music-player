@@ -15,8 +15,11 @@
       "title": "The Right Craig",
       "file": "music/the-right-craig.mp3",
       "cover": "",
-      "youtube": "",
-      "tags": []
+      "youtube": "https://www.youtube.com/watch?v=najPiqhKaEQ",
+      "tags": [
+        "family"
+      ],
+      "description": "This is a song about my wife and I"
     },
     {
       "id": "good-dog-titus",
