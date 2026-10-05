@@ -133,6 +133,19 @@
         "friends"
       ],
       "description": "Neighborhood Party theme song!"
+    },
+    {
+      "id": "2ks",
+      "title": "2KS",
+      "file": "music/2ks.mp3",
+      "cover": "covers/2ks.jpeg",
+      "youtube": "https://www.youtube.com/watch?v=HYG_ODvB5jk",
+      "tags": [
+        "family",
+        "friends"
+      ],
+      "added": "2026-10-04",
+      "description": "This song represents my daughter and her two friends!"
     }
   ],
   "playlists": [
