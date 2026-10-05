@@ -198,5 +198,8 @@
   "spotifyPlaylists": [],
   "spotify": {
     "clientId": "4e18f7c918b94391b7142a03470e1130"
+  },
+  "community": {
+    "api": "https://craigs-songs-playlists.craig-willett.workers.dev"
   }
 }
