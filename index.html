@@ -15,7 +15,10 @@
 </head>
 <body>
   <header class="top">
-    <a href="admin.html" class="corner-link" aria-label="Admin"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M19.4 13a7.6 7.6 0 0 0 0-2l2.1-1.6-2-3.5-2.5 1a7.4 7.4 0 0 0-1.7-1L15 3.3h-4l-.3 2.6a7.4 7.4 0 0 0-1.7 1l-2.5-1-2 3.5L6.6 11a7.6 7.6 0 0 0 0 2l-2.1 1.6 2 3.5 2.5-1a7.4 7.4 0 0 0 1.7 1l.3 2.6h4l.3-2.6a7.4 7.4 0 0 0 1.7-1l2.5 1 2-3.5zM13 15.5A3.5 3.5 0 1 1 13 8.5a3.5 3.5 0 0 1 0 7z" transform="translate(-1 0)"/></svg><span>Admin</span></a>
+    <div class="corner">
+      <button id="help-btn" class="corner-link help-btn" aria-label="How to use this app" title="How to use">?</button>
+      <a href="admin.html" class="corner-link" aria-label="Admin"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M19.4 13a7.6 7.6 0 0 0 0-2l2.1-1.6-2-3.5-2.5 1a7.4 7.4 0 0 0-1.7-1L15 3.3h-4l-.3 2.6a7.4 7.4 0 0 0-1.7 1l-2.5-1-2 3.5L6.6 11a7.6 7.6 0 0 0 0 2l-2.1 1.6 2 3.5 2.5-1a7.4 7.4 0 0 0 1.7 1l.3 2.6h4l.3-2.6a7.4 7.4 0 0 0 1.7-1l2.5 1 2-3.5zM13 15.5A3.5 3.5 0 1 1 13 8.5a3.5 3.5 0 0 1 0 7z" transform="translate(-1 0)"/></svg><span>Admin</span></a>
+    </div>
     <h1><span id="app-title">Craig's Songs</span> <span id="app-version" class="version"></span></h1>
     <nav class="tabs" role="tablist">
       <button class="tab active" data-view="songs" role="tab">Songs</button>
@@ -191,6 +194,19 @@
     </div>
   </div>
 
+  <div id="help-modal" class="modal" hidden role="dialog" aria-modal="true" aria-labelledby="help-title">
+    <div class="modal-box cm-box help-box">
+      <div class="modal-head">
+        <div id="help-title" class="modal-title">How to use Craig's Songs</div>
+        <button id="help-close" class="modal-x" aria-label="Close">✕</button>
+      </div>
+      <div class="cm-body">
+        <div id="help-body"></div>
+        <p id="help-version" class="help-version"></p>
+      </div>
+    </div>
+  </div>
+
   <div id="toast" class="toast" hidden></div>
 
   <audio id="audio" preload="none"></audio>
@@ -198,5 +214,6 @@
   <script src="app.js"></script>
   <script src="spotify.js"></script>
   <script src="community.js"></script>
+  <script src="help.js"></script>
 </body>
 </html>

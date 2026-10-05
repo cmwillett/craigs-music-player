@@ -295,3 +295,30 @@ body.selecting .row .now { display: none; }
 .subview h2.first { margin-top: 12px; }
 .pl-head { margin: 4px 0 8px; }
 .pl-head .sub-hint { margin: 0; }
+
+/* top-right: ? and Admin */
+.corner { position: absolute; right: 16px; top: calc(16px + env(safe-area-inset-top)); display: flex; gap: 8px; }
+.corner .corner-link { position: static; }
+.help-btn { width: 36px; justify-content: center; padding: 7px 0; font-size: 1rem; font-weight: 800; color: var(--text); }
+.top h1 { padding-right: 150px; }
+@media (max-width: 420px) {
+  .corner .corner-link span { display: none; }   /* Admin shows as just the gear on phones */
+  .corner .corner-link { padding: 7px 9px; }
+  .top h1 { padding-right: 90px; }
+}
+
+/* how-to guide */
+.help-box { max-width: 600px; }
+.help-sec { border-bottom: 1px solid #2c303b; }
+.help-sec summary { cursor: pointer; padding: 14px 4px; font-weight: 700; list-style: none; display: flex; justify-content: space-between; }
+.help-sec summary::-webkit-details-marker { display: none; }
+.help-sec summary::after { content: '▾'; color: var(--muted); transition: transform .15s; }
+.help-sec[open] summary::after { transform: rotate(180deg); }
+.help-text { padding: 0 4px 14px; color: #d6d8de; font-size: .93rem; line-height: 1.55; }
+.help-text ol, .help-text ul { margin: 6px 0; padding-left: 22px; }
+.help-text li { margin: 4px 0; }
+.help-text h4 { margin: 12px 0 2px; font-size: .9rem; color: var(--text); }
+.help-text p { margin: 8px 0; }
+.help-you { font-size: .7rem; font-weight: 700; background: var(--accent); color: var(--accent-ink); border-radius: 5px; padding: 1px 6px; margin-left: 4px; vertical-align: 1px; }
+.help-ok { color: #7ee787; font-weight: 600; }
+.help-version { color: var(--muted); font-size: .8rem; text-align: center; margin: 14px 0 0; }

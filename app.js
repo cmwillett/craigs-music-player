@@ -678,6 +678,7 @@ async function boot() {
   renderPlaylists();
   if (typeof CM !== 'undefined') CM.refreshButtons();
   openSharedSong();
+  if (typeof HELP !== 'undefined') HELP.nudge();
   if (typeof SP !== 'undefined') SP.init(data);
 }
 boot();
