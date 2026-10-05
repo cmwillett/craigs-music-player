@@ -266,13 +266,14 @@ function resolvePlaylist(p) {
   return (p.songs || []).map((id) => byId[id]).filter(Boolean);
 }
 
+const plMeta = (p, songs) => `${songs.length} song${songs.length === 1 ? '' : 's'}${p.by ? ` · by ${p.by}` : ''}`;
 let openPlaylist = null; // key of the playlist being viewed
 const plKey = (p) => p.id || p.name;
 
 function renderPlaylists() {
   const ul = $('#app-playlists');
   ul.replaceChildren();
-  const lists = data.playlists || [];
+  const lists = (data.playlists || []).filter((p) => !p.hidden);
   if (!lists.length) ul.append(el('li', { className: 'empty', textContent: 'No playlists yet.' }));
   lists.forEach((p) => {
     const songs = resolvePlaylist(p);
@@ -280,7 +281,7 @@ function renderPlaylists() {
       el('div', { className: 'cover' }),
       el('div', {},
         el('div', { className: 'title', textContent: p.name }),
-        el('div', { className: 'meta', textContent: `${songs.length} song${songs.length === 1 ? '' : 's'}` })));
+        el('div', { className: 'meta', textContent: plMeta(p, songs) })));
     open.onclick = () => showPlaylist(plKey(p));
     const play = el('button', { className: 'pill', textContent: '▶', title: 'Play' });
     play.onclick = () => {
@@ -293,6 +294,7 @@ function renderPlaylists() {
     const li = el('li', { className: 'row' }, open, play, shuf);
     li.dataset.pl = plKey(p);
     li.dataset.count = songs.length;
+    li.dataset.meta = plMeta(p, songs);
     ul.append(li);
   });
   renderPlaylistDetail();
@@ -343,6 +345,7 @@ function renderPlaylistDetail() {
   if (!p) { openPlaylist = null; return; }
   const songs = resolvePlaylist(p);
   $('#pl-name').textContent = p.name;
+  if (typeof CM !== 'undefined') CM.decorateDetail(p);
   $('#pl-count').textContent = `${songs.length} song${songs.length === 1 ? '' : 's'}`;
   $('#pl-play').onclick = () => playList(songs, 0, plKey(p));
   $('#pl-shuffle').onclick = () => playList(shuffle(songs), 0, plKey(p));
@@ -379,7 +382,7 @@ function markPlaying() {
       if (on) {
         meta.append(el('span', { className: 'eq' + (paused ? ' paused' : '') }, el('i'), el('i'), el('i')),
           `${paused ? 'Paused' : 'Now playing'} · ${index + 1} of ${queue.length}`);
-      } else meta.textContent = `${n} song${n === 1 ? '' : 's'}`;
+      } else meta.textContent = r.dataset.meta || `${n} song${n === 1 ? '' : 's'}`;
     }
     const btn = r.querySelector('.pl-play');
     if (btn) {
@@ -600,6 +603,7 @@ async function boot() {
   try {
     const res = await fetch('songs.json', { cache: 'no-cache' });
     data = await res.json();
+    if (typeof CM !== 'undefined') { CM.applyOverlay(data); await CM.ready; }
   } catch (e) {
     $('#song-list').replaceChildren(el('li', { className: 'empty', textContent: "Couldn't load the song list." }));
     return;
@@ -607,6 +611,7 @@ async function boot() {
   if (data.title) { document.title = data.title; $('#app-title').textContent = data.title; }
   renderSongs();
   renderPlaylists();
+  if (typeof CM !== 'undefined') CM.refreshButtons();
   openSharedSong();
   if (typeof SP !== 'undefined') SP.init(data);
 }

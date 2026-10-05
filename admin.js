@@ -183,6 +183,7 @@ function render() {
   $('#yt-lists').value = (data.youtubePlaylists || []).map((p) => `${p.name} | ${p.url}`).join('\n');
   $('#sp-lists').value = (data.spotifyPlaylists || []).map((p) => `${p.name} | ${p.url}`).join('\n');
   $('#sp-client').value = data.spotify?.clientId || '';
+  $('#cm-api').value = data.community?.api || '';
   renderPending();
 }
 
@@ -384,6 +385,7 @@ function playlistEditor(p, data, isNew) {
       <summary></summary>
       <label>Playlist name</label><input class="p-name" type="text" placeholder="Road trip">
       <label class="check"><input class="p-all" type="checkbox"> Every song (updates automatically)</label>
+      <label class="check"><input class="p-hide" type="checkbox"> Hide from the app</label>
       <div class="p-pick">
         <ul class="pl-songs"></ul>
         <select class="pl-add"></select>
@@ -396,9 +398,10 @@ function playlistEditor(p, data, isNew) {
   det.dataset.id = 'pl:' + key;
   const pending = ops.some((o) => o.id === 'pl:' + stableId);
   q('summary').textContent = isNew ? 'New playlist' :
-    `${p.name} · ${p.songs === 'all' ? 'every song' : (p.songs || []).length + ' songs'}${pending ? ' · edited' : ''}`;
+    `${p.name} · ${p.songs === 'all' ? 'every song' : (p.songs || []).length + ' songs'}${p.by ? ' · by ' + p.by : ''}${p.hidden ? ' · hidden' : ''}${pending ? ' · edited' : ''}`;
   q('.p-name').value = p.name || '';
   q('.p-all').checked = all;
+  q('.p-hide').checked = !!p.hidden;
 
   function draw() {
     q('.p-pick').hidden = all;
@@ -432,6 +435,7 @@ function playlistEditor(p, data, isNew) {
     const name = q('.p-name').value.trim();
     if (!name) { q('.msg').textContent = 'Give the playlist a name.'; q('.msg').className = 'msg err'; return; }
     const songs = all ? 'all' : [...picked];
+    const hide = q('.p-hide').checked;
     const id = isNew ? (slug(name) || 'playlist') + '-' + Date.now().toString(36) : stableId;
     ops.push({
       id: 'pl:' + (isNew ? id : stableId),
@@ -443,6 +447,7 @@ function playlistEditor(p, data, isNew) {
         pl.id = pl.id || id;
         pl.name = name;
         pl.songs = songs;
+        if (hide) pl.hidden = true; else delete pl.hidden;
       },
     });
     if (isNew) newPlaylist = null;
@@ -484,6 +489,26 @@ $('#pl-new').onclick = () => {
   renderPlaylistEditors(draft());
   const last = $('#pl-edit-list').lastElementChild;
   last?.querySelector('.p-name')?.focus();
+};
+
+// Playlists-from-the-app helper (Cloudflare Worker)
+$('#cm-api-test').onclick = async () => {
+  const url = $('#cm-api').value.trim();
+  if (!url) return say('#cm-api-msg', 'Paste the helper address first.', 'err');
+  say('#cm-api-msg', 'Testing…');
+  try {
+    const res = await fetch(url, { cache: 'no-store' });
+    const body = await res.json();
+    say('#cm-api-msg', body.ok ? 'Connected! Now tap Add to changes, then Save all.' : 'It answered, but not like the playlist helper.', body.ok ? 'ok' : 'err');
+  } catch { say('#cm-api-msg', "Couldn't reach it. Check the address (it should start with https://).", 'err'); }
+};
+$('#cm-api-save').onclick = () => {
+  const url = $('#cm-api').value.trim().replace(/\/+$/, '');
+  if (url && !/^https:\/\/[^\s]+$/.test(url)) return say('#cm-api-msg', 'The address should start with https://', 'err');
+  queue(url ? 'Set playlist helper address' : 'Turn off playlists from the app', (d) => {
+    if (url) d.community = { ...(d.community || {}), api: url }; else delete d.community;
+  });
+  say('#cm-api-msg', 'Added to your changes.', 'ok');
 };
 
 // Spotify Connect setup

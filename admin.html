@@ -117,6 +117,16 @@
       </div>
 
       <div class="card">
+        <h2 style="margin-top:0;color:var(--text)">Playlists from the app</h2>
+        <p class="hint">Lets anyone using the app make playlists (they can change only their own; you can manage all of them above). Needs the small Cloudflare helper. Follow <code>worker/SETUP.md</code> in your repo, then paste its address here.</p>
+        <label>Playlist helper address</label>
+        <input id="cm-api" type="url" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="https://craigs-songs-playlists.yourname.workers.dev">
+        <button id="cm-api-test" type="button" class="link" style="margin-top:8px">Test connection</button>
+        <button id="cm-api-save" class="primary">Add to changes</button>
+        <div id="cm-api-msg" class="msg"></div>
+      </div>
+
+      <div class="card">
         <h2 style="margin-top:0;color:var(--text)">Spotify Connect (full songs)</h2>
         <p class="hint">Lets up to 5 Spotify Premium people play your Spotify playlists with full songs. One-time setup:</p>
         <ol class="hint" style="padding-left:20px;line-height:1.6">

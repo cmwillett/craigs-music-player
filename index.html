@@ -61,7 +61,10 @@
 
     <section id="view-playlists" class="view" hidden>
       <div id="playlist-index">
-        <h2>Playlists</h2>
+        <div class="pl-head">
+          <h2>Playlists</h2>
+          <button id="pl-new" class="pl-new" hidden>+ New playlist</button>
+        </div>
         <ul id="app-playlists" class="list"></ul>
         <div id="my-sp" hidden>
           <h2>Your Spotify</h2>
@@ -86,7 +89,11 @@
       </div>
       <div id="playlist-detail" hidden>
         <button id="pl-back" class="back">← All playlists</button>
-        <h2 id="pl-name" class="pl-name"></h2>
+        <div class="pl-title-row">
+          <h2 id="pl-name" class="pl-name"></h2>
+          <button id="pl-edit" class="pl-edit" hidden>Edit</button>
+        </div>
+        <div id="pl-by" class="pl-by" hidden></div>
         <div class="actions">
           <button id="pl-play" class="pill">▶ Play</button>
           <button id="pl-shuffle" class="pill">⤮ Shuffle</button>
@@ -127,11 +134,35 @@
     </div>
   </div>
 
+  <div id="cm-modal" class="modal" hidden role="dialog" aria-modal="true" aria-labelledby="cm-title">
+    <div class="modal-box cm-box">
+      <div class="modal-head">
+        <div id="cm-title" class="modal-title">New playlist</div>
+        <button id="cm-cancel" class="modal-x" aria-label="Close">✕</button>
+      </div>
+      <div class="cm-body">
+        <label class="cm-label" for="cm-name">Playlist name</label>
+        <input id="cm-name" class="cm-input" type="text" maxlength="60" placeholder="Road trip" autocomplete="off">
+        <label class="cm-label" for="cm-by">Your name <span class="sub">(shows as "by …")</span></label>
+        <input id="cm-by" class="cm-input" type="text" maxlength="40" placeholder="Optional" autocomplete="off">
+        <div class="cm-label">Songs <span id="cm-count" class="sub"></span></div>
+        <ul id="cm-songs" class="cm-songs"></ul>
+        <select id="cm-add" class="cm-input"></select>
+        <div id="cm-msg" class="cm-msg"></div>
+        <div class="cm-btns">
+          <button id="cm-delete" class="cm-del" hidden>Delete</button>
+          <button id="cm-save" class="cm-save">Save playlist</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <div id="toast" class="toast" hidden></div>
 
   <audio id="audio" preload="none"></audio>
   <script src="version.js"></script>
   <script src="app.js"></script>
   <script src="spotify.js"></script>
+  <script src="community.js"></script>
 </body>
 </html>

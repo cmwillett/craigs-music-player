@@ -227,3 +227,28 @@ a.sp-btn { text-decoration: none; display: inline-block; }
 .sp-device { display: flex; align-items: center; gap: 8px; color: var(--muted); font-size: .85rem; margin: 0 0 10px; }
 .sp-device[hidden] { display: none; }
 .sp-device select { flex: 1; min-width: 0; background: var(--card); color: var(--text); border: 0; border-radius: 8px; padding: 8px; font: inherit; }
+
+/* playlists anyone can make */
+.pl-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.pl-new { padding: 7px 12px; border-radius: 999px; background: var(--card-2); color: var(--text); font-size: .85rem; font-weight: 600; }
+.pl-new[hidden], .pl-edit[hidden], .pl-by[hidden] { display: none; }
+.pl-title-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.pl-edit { padding: 6px 14px; border-radius: 999px; background: var(--card-2); font-size: .85rem; font-weight: 600; }
+.pl-by { color: var(--muted); font-size: .85rem; margin: -4px 0 8px; }
+.cm-box { max-width: 520px; max-height: calc(100vh - 24px); display: flex; flex-direction: column; }
+.cm-body { padding: 4px 16px 16px; overflow-y: auto; }
+.cm-label { display: block; color: var(--muted); font-size: .85rem; margin: 12px 0 4px; }
+.cm-label .sub { font-weight: 400; }
+.cm-input { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #3a3f4c; background: var(--bg); color: var(--text); font: inherit; }
+.cm-songs { list-style: none; padding: 0; margin: 0 0 8px; display: grid; gap: 6px; }
+.cm-songs li { display: flex; align-items: center; gap: 6px; background: var(--bg); border-radius: 10px; padding: 6px 8px; }
+.cm-songs li span { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cm-songs li button { width: 34px; height: 34px; border-radius: 8px; background: var(--card-2); }
+.cm-songs li button:disabled { opacity: .35; }
+.cm-songs .cm-empty { color: var(--muted); background: none; padding: 4px 2px; }
+.cm-msg { min-height: 1.3em; margin-top: 10px; color: #ff9b94; font-size: .9rem; }
+.cm-btns { display: flex; gap: 8px; margin-top: 6px; }
+.cm-save { flex: 2; padding: 13px; border-radius: 12px; background: var(--accent); color: var(--accent-ink); font-weight: 700; }
+.cm-save:disabled { opacity: .5; }
+.cm-del { flex: 1; padding: 13px; border-radius: 12px; background: var(--card-2); color: #ff9b94; font-weight: 600; }
+.cm-del[hidden] { display: none; }
