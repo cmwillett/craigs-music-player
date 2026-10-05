@@ -59,9 +59,9 @@ const CM = (() => {
   let editing = null;  // playlist being edited (null = new)
   let picked = [];
 
-  function open(p = null) {
+  function open(p = null, preset = null) {
     editing = p;
-    picked = p ? [...(p.songs === 'all' ? [] : p.songs || [])] : [];
+    picked = p ? [...(p.songs === 'all' ? [] : p.songs || [])] : [...(preset || [])];
     $('#cm-title').textContent = p ? 'Edit playlist' : 'New playlist';
     $('#cm-name').value = p ? p.name : '';
     $('#cm-by').value = load(NAME) || '';
@@ -122,6 +122,7 @@ const CM = (() => {
       renderPlaylists();
       if (typeof showPlaylist === 'function') showPlaylist(res.playlist.id);
       toast(editing ? 'Playlist updated.' : 'Playlist saved! Everyone will see it in about a minute.', null, null, 4000);
+      if (typeof setSelecting === 'function' && selecting) setSelecting(false);
     } catch (e) {
       $('#cm-msg').textContent = e.message;
       $('#cm-save').disabled = false;
@@ -154,7 +155,66 @@ const CM = (() => {
   }
   function refreshButtons() {
     $('#pl-new').hidden = !api();
+    $('#select-btn').hidden = !api();
   }
+
+  // ---------- "Add to playlist" from selected songs ----------
+  let pickIds = [];
+  function pickPlaylist(ids) {
+    pickIds = ids;
+    const n = ids.length;
+    $('#pick-title').textContent = `Add ${n} song${n === 1 ? '' : 's'} to…`;
+    $('#pick-msg').textContent = '';
+    const ul = $('#pick-list');
+    ul.replaceChildren();
+    const fresh = el('button', { className: 'pick-row pick-new' }, el('span', { className: 'pick-plus', textContent: '+' }), el('span', { textContent: 'New playlist' }));
+    fresh.onclick = () => { closePick(); open(null, pickIds); };
+    ul.append(el('li', {}, fresh));
+    const mine = (data.playlists || []).filter((p) => isMine(p) && !p.hidden);
+    mine.forEach((p) => {
+      const have = new Set(p.songs || []);
+      const adding = ids.filter((id) => !have.has(id)).length;
+      const b = el('button', { className: 'pick-row' },
+        el('div', { className: 'cover' }),
+        el('div', { className: 'pick-text' },
+          el('div', { className: 'title', textContent: p.name }),
+          el('div', { className: 'meta', textContent: adding ? `${(p.songs || []).length} songs · adds ${adding}` : 'Already has all of these' })));
+      b.disabled = !adding;
+      b.onclick = () => addTo(p, b);
+      ul.append(el('li', {}, b));
+    });
+    $('#pick-note').textContent = mine.length
+      ? 'You can add to playlists you made on this device.'
+      : "Playlists you make will show up here so you can add to them later.";
+    $('#pick-modal').hidden = false;
+    document.body.classList.add('modal-open');
+  }
+  function closePick() {
+    $('#pick-modal').hidden = true;
+    document.body.classList.remove('modal-open');
+  }
+  async function addTo(p, btn) {
+    const songs = [...(p.songs || [])];
+    pickIds.forEach((id) => { if (!songs.includes(id)) songs.push(id); });
+    const added = songs.length - (p.songs || []).length;
+    btn.disabled = true;
+    $('#pick-msg').textContent = 'Saving…';
+    try {
+      const res = await send('save', { id: p.id, name: p.name, songs });
+      remember(res.playlist.id, res.playlist);
+      applyOverlay(data);
+      closePick();
+      renderPlaylists();
+      if (typeof setSelecting === 'function') setSelecting(false);
+      toast(`Added ${added} song${added === 1 ? '' : 's'} to ${p.name}.`, 'View', () => {
+        document.querySelector('.tab[data-view=playlists]').click();
+        showPlaylist(res.playlist.id);
+      }, 5000);
+    } catch (e) { $('#pick-msg').textContent = e.message; btn.disabled = false; }
+  }
+  $('#pick-close').onclick = closePick;
+  $('#pick-modal').addEventListener('click', (e) => { if (e.target.id === 'pick-modal') closePick(); });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !$('#pick-modal').hidden) closePick(); });
 
   $('#pl-new').onclick = () => open(null);
   ['#cm-name', '#cm-by'].forEach((sel) => $(sel).addEventListener('input', () => { $('#cm-msg').textContent = ''; }));
@@ -165,5 +225,5 @@ const CM = (() => {
   $('#cm-modal').addEventListener('click', (e) => { if (e.target.id === 'cm-modal') close(); });
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !$('#cm-modal').hidden) close(); });
 
-  return { applyOverlay, decorateDetail, refreshButtons, isMine, ready };
+  return { applyOverlay, decorateDetail, refreshButtons, isMine, ready, pickPlaylist, open };
 })();

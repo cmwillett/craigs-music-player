@@ -19,7 +19,11 @@ Use a separate key from your admin-page key, so you can replace one without brea
 
 ## 2. Create the Worker
 
-1. Sign in at dash.cloudflare.com → **Workers & Pages** (left menu) → **Create** → **Create Worker** (the "Hello World" starter).
+1. Sign in at dash.cloudflare.com. Get to Workers either way:
+   - on the home page, click **Ship something new** in the **Workers** column, **or**
+   - left menu: **Build → Compute → Workers & Pages**.
+
+   Then **Create** (or **Create application**) → **Start with Hello World!** (a plain Worker; not a template or a repository import).
 2. **Name:** `craigs-songs-playlists` → **Deploy**.
 3. Click **Edit code**. Delete everything in the editor, paste in the whole contents of `worker/playlist-worker.js` from this repo, then click **Deploy**.
 

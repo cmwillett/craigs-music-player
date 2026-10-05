@@ -252,3 +252,32 @@ a.sp-btn { text-decoration: none; display: inline-block; }
 .cm-save:disabled { opacity: .5; }
 .cm-del { flex: 1; padding: 13px; border-radius: 12px; background: var(--card-2); color: #ff9b94; font-weight: 600; }
 .cm-del[hidden] { display: none; }
+
+/* select songs -> add to playlist */
+.select-btn.on { background: var(--text); color: var(--bg); }
+.select-btn[hidden] { display: none; }
+.sel-box { display: none; flex: none; width: 24px; height: 24px; border-radius: 50%; border: 2px solid var(--muted);
+  align-items: center; justify-content: center; color: transparent; }
+body.selecting .sel-box { display: inline-flex; }
+.row.selected .sel-box { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+body.selecting .row.selected { outline: 2px solid var(--accent); }
+body.selecting .row .now { display: none; }
+.sel-bar { display: flex; align-items: center; gap: 10px; margin-top: 10px; background: var(--card-2); border-radius: 12px; padding: 8px 8px 8px 14px; }
+.sel-bar[hidden] { display: none; }
+.sel-count { flex: 1; min-width: 0; font-weight: 600; font-size: .9rem; }
+.sel-add { padding: 9px 14px; border-radius: 10px; background: var(--accent); color: var(--accent-ink); font-weight: 700; white-space: nowrap; }
+.sel-add:disabled { opacity: .4; }
+.sel-cancel { width: 36px; height: 36px; border-radius: 50%; color: var(--muted); }
+.pick-list { list-style: none; padding: 0; margin: 4px 0 0; display: grid; gap: 8px; }
+.pick-row { width: 100%; display: flex; align-items: center; gap: 12px; text-align: left; background: var(--bg); border-radius: 12px; padding: 10px; }
+.pick-row:disabled { opacity: .45; }
+.pick-row .cover { width: 44px; height: 44px; }
+.pick-text { min-width: 0; flex: 1; }
+.pick-new { font-weight: 700; }
+.pick-plus { width: 44px; height: 44px; border-radius: 10px; background: var(--accent); color: var(--accent-ink); display: inline-flex; align-items: center; justify-content: center; font-size: 1.5rem; }
+.pick-note { color: var(--muted); font-size: .85rem; margin: 12px 2px 0; }
+
+/* keep the Play / Shuffle / Select row tidy on narrow phones */
+.actions { flex-wrap: wrap; align-items: center; }
+.actions .pill { white-space: nowrap; padding: 9px 14px; }
+@media (max-width: 400px) { .actions .pill { padding: 9px 12px; font-size: .95rem; } .actions .count { font-size: .8rem; } }

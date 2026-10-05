@@ -21,6 +21,11 @@
       <button class="tab active" data-view="songs" role="tab">Songs</button>
       <button class="tab" data-view="playlists" role="tab">Playlists</button>
     </nav>
+    <div id="sel-bar" class="sel-bar" hidden>
+      <span id="sel-count" class="sel-count"></span>
+      <button id="sel-add" class="sel-add" disabled>+ Add to playlist</button>
+      <button id="sel-cancel" class="sel-cancel" aria-label="Cancel selecting">✕</button>
+    </div>
   </header>
 
   <main>
@@ -54,6 +59,7 @@
       <div class="actions">
         <button id="play-all" class="pill">▶ Play these</button>
         <button id="shuffle-all" class="pill">⤮ Shuffle</button>
+        <button id="select-btn" class="pill select-btn" hidden>Select</button>
         <span id="count" class="count"></span>
       </div>
       <div id="song-list"></div>
@@ -153,6 +159,20 @@
           <button id="cm-delete" class="cm-del" hidden>Delete</button>
           <button id="cm-save" class="cm-save">Save playlist</button>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="pick-modal" class="modal" hidden role="dialog" aria-modal="true" aria-labelledby="pick-title">
+    <div class="modal-box cm-box">
+      <div class="modal-head">
+        <div id="pick-title" class="modal-title">Add to playlist</div>
+        <button id="pick-close" class="modal-x" aria-label="Close">✕</button>
+      </div>
+      <div class="cm-body">
+        <ul id="pick-list" class="pick-list"></ul>
+        <p id="pick-note" class="pick-note"></p>
+        <div id="pick-msg" class="cm-msg"></div>
       </div>
     </div>
   </div>

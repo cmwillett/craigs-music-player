@@ -81,6 +81,37 @@ function openSharedSong() {
   toast(`Shared with you: ${song.title}`, '▶ Play', () => { const list = filtered(); playList(list, list.indexOf(song)); }, 15000);
 }
 
+// ---------- select songs (then "Add to playlist") ----------
+let selecting = false;
+const selected = new Set();
+function setSelecting(on) {
+  selecting = on;
+  if (!on) selected.clear();
+  document.body.classList.toggle('selecting', on);
+  $('#select-btn').textContent = on ? 'Cancel' : 'Select';
+  $('#select-btn').classList.toggle('on', on);
+  updateSelectBar();
+  document.querySelectorAll('.row[data-id]').forEach((r) => r.classList.toggle('selected', selected.has(r.dataset.id)));
+}
+function toggleSelected(id) {
+  if (selected.has(id)) selected.delete(id); else selected.add(id);
+  document.querySelectorAll(`.row[data-id="${CSS.escape(id)}"]`).forEach((r) => r.classList.toggle('selected', selected.has(id)));
+  updateSelectBar();
+}
+function updateSelectBar() {
+  const bar = $('#sel-bar');
+  bar.hidden = !selecting;
+  const n = selected.size;
+  $('#sel-count').textContent = n ? `${n} selected` : 'Tap songs to select them';
+  $('#sel-add').disabled = !n;
+}
+// Selected songs in the order they appear in the list on screen.
+function selectedInOrder() {
+  const seen = new Set();
+  return [...document.querySelectorAll('#song-list .row[data-id]')].map((r) => r.dataset.id)
+    .filter((id) => selected.has(id) && !seen.has(id) && seen.add(id));
+}
+
 // ---------- shuffle / repeat ----------
 const MODES = 'songs-modes-v1';
 let modes = { shuffle: false, repeat: 'off' }; // repeat: off | all | one
@@ -196,8 +227,10 @@ function songRow(song, list, src = null) {
   if (tags.length) text.append(el('div', { className: 'meta', style: 'margin-top:4px' }, tags));
   else if (!song.description) text.append(el('div', { className: 'meta', textContent: 'Tap to play' }));
 
-  const main = el('button', { className: 'main' }, coverImg(song), text);
+  const check = el('span', { className: 'sel-box', innerHTML: '<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>' });
+  const main = el('button', { className: 'main' }, check, coverImg(song), text);
   main.onclick = () => {
+    if (selecting) { toggleSelected(song.id); return; }
     // Tapping the song that's already loaded pauses/resumes instead of restarting it.
     if (queue[index]?.id === song.id && audio.src) { audio.paused ? audio.play() : audio.pause(); return; }
     playList(list, list.indexOf(song), src);
@@ -215,7 +248,7 @@ function songRow(song, list, src = null) {
   const share = el('button', { className: 'share-btn', title: 'Share this song', innerHTML: SHARE_ICON });
   share.setAttribute('aria-label', `Share ${song.title}`);
   share.onclick = () => shareSong(song);
-  const li = el('li', { className: 'row' }, main, el('div', { className: 'row-actions' }, yt, share));
+  const li = el('li', { className: 'row' + (selected.has(song.id) ? ' selected' : '') }, main, el('div', { className: 'row-actions' }, yt, share));
   li.dataset.id = song.id;
 
   // "more" toggle for long descriptions
@@ -551,6 +584,10 @@ const spOn = () => typeof SP !== 'undefined' && SP.active();
 $('#toggle').onclick = () => { if (spOn()) return SP.control('toggle'); audio.paused ? audio.play() : audio.pause(); };
 $('#next').onclick = () => (spOn() ? SP.control('next') : next());
 $('#prev').onclick = () => (spOn() ? SP.control('prev') : prev());
+$('#select-btn').onclick = () => setSelecting(!selecting);
+$('#sel-cancel').onclick = () => setSelecting(false);
+$('#sel-add').onclick = () => { if (selected.size && typeof CM !== 'undefined') CM.pickPlaylist(selectedInOrder()); };
+document.querySelectorAll('.tab').forEach((t) => t.addEventListener('click', () => { if (selecting) setSelecting(false); }));
 $('#shuffle-mode').onclick = toggleShuffle;
 $('#repeat-mode').onclick = cycleRepeat;
 updateModeButtons();
