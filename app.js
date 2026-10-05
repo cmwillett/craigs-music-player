@@ -330,6 +330,7 @@ function renderPlaylists() {
     li.dataset.meta = plMeta(p, songs);
     ul.append(li);
   });
+  updateSubtabs();
   renderPlaylistDetail();
 
   const yt = $('#yt-playlists');
@@ -364,6 +365,33 @@ function renderPlaylists() {
     sp.append(el('li', {}, a));
   });
 }
+
+// ---------- Playlists page sub-tabs: Playlists / Spotify / YouTube ----------
+const SUBTAB = 'songs-subtab-v1';
+let subtab = (() => { try { return localStorage.getItem(SUBTAB) || 'mine'; } catch { return 'mine'; } })();
+function updateSubtabs() {
+  const has = {
+    mine: true,
+    spotify: !!(data.spotify && data.spotify.clientId) || (data.spotifyPlaylists || []).some((p) => p.url),
+    youtube: (data.youtubePlaylists || []).some((p) => p.url),
+  };
+  if (!has[subtab]) subtab = 'mine';
+  const visible = Object.values(has).filter(Boolean).length;
+  document.querySelector('.subtabs').hidden = visible < 2;
+  document.querySelectorAll('.subtab').forEach((b) => {
+    b.hidden = !has[b.dataset.sub];
+    b.classList.toggle('active', b.dataset.sub === subtab);
+    b.setAttribute('aria-selected', String(b.dataset.sub === subtab));
+  });
+  document.querySelectorAll('.subview').forEach((v) => { v.hidden = v.dataset.sub !== subtab; });
+}
+document.querySelectorAll('.subtab').forEach((b) => {
+  b.onclick = () => {
+    subtab = b.dataset.sub;
+    try { localStorage.setItem(SUBTAB, subtab); } catch {}
+    updateSubtabs();
+  };
+});
 
 function showPlaylist(key) {
   openPlaylist = key;

@@ -281,3 +281,17 @@ body.selecting .row .now { display: none; }
 .actions { flex-wrap: wrap; align-items: center; }
 .actions .pill { white-space: nowrap; padding: 9px 14px; }
 @media (max-width: 400px) { .actions .pill { padding: 9px 12px; font-size: .95rem; } .actions .count { font-size: .8rem; } }
+
+/* Playlists page sub-tabs */
+.subtabs { display: flex; gap: 0; background: var(--card); border-radius: 12px; padding: 4px; margin: 10px 0 6px; }
+.subtabs[hidden] { display: none; }
+.subtab { flex: 1; padding: 9px 6px; border-radius: 9px; color: var(--muted); font-weight: 600; font-size: .92rem; }
+.subtab[hidden] { display: none; }
+.subtab.active { background: var(--card-2); color: var(--text); box-shadow: 0 1px 4px rgba(0,0,0,.3); }
+.subtab[data-sub="spotify"].active { color: #1ed760; }
+.subtab[data-sub="youtube"].active { color: #ff5c57; }
+.subview[hidden] { display: none; }
+.sub-hint { color: var(--muted); font-size: .85rem; margin: 8px 0; }
+.subview h2.first { margin-top: 12px; }
+.pl-head { margin: 4px 0 8px; }
+.pl-head .sub-hint { margin: 0; }

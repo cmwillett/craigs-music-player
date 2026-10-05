@@ -67,13 +67,23 @@
 
     <section id="view-playlists" class="view" hidden>
       <div id="playlist-index">
-        <div class="pl-head">
-          <h2>Playlists</h2>
-          <button id="pl-new" class="pl-new" hidden>+ New playlist</button>
+        <div class="subtabs" role="tablist" aria-label="Playlist type">
+          <button class="subtab active" data-sub="mine" role="tab">Playlists</button>
+          <button class="subtab" data-sub="spotify" role="tab" hidden>Spotify</button>
+          <button class="subtab" data-sub="youtube" role="tab" hidden>YouTube</button>
         </div>
-        <ul id="app-playlists" class="list"></ul>
+
+        <div class="subview" data-sub="mine">
+          <div class="pl-head">
+            <p class="sub-hint">Playlists of the songs in this app.</p>
+            <button id="pl-new" class="pl-new" hidden>+ New playlist</button>
+          </div>
+          <ul id="app-playlists" class="list"></ul>
+        </div>
+
+        <div class="subview" data-sub="spotify" hidden>
         <div id="my-sp" hidden>
-          <h2>Your Spotify</h2>
+          <h2 class="first">Your Spotify</h2>
           <p id="my-sp-hint" class="sp-hint"></p>
           <div class="sp-actions">
             <button id="sp-connect" class="sp-btn" hidden>Connect Spotify</button>
@@ -86,11 +96,15 @@
           <div id="sp-msg-box" class="sp-msg" hidden></div>
           <ul id="my-sp-list" class="list"></ul>
         </div>
-        <h2>On YouTube <span class="sub">(videos with lyrics)</span></h2>
-        <ul id="yt-playlists" class="list"></ul>
-        <div id="sp-section" hidden>
-          <h2>On Spotify</h2>
-          <ul id="sp-playlists" class="list"></ul>
+          <div id="sp-section" hidden>
+            <h2>Shared Spotify playlists</h2>
+            <ul id="sp-playlists" class="list"></ul>
+          </div>
+        </div>
+
+        <div class="subview" data-sub="youtube" hidden>
+          <p class="sub-hint">Lyric videos. Tap one to watch it here in the app.</p>
+          <ul id="yt-playlists" class="list"></ul>
         </div>
       </div>
       <div id="playlist-detail" hidden>
