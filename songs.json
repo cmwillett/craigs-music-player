@@ -183,6 +183,19 @@
         "streamwood-all-night-irish-folk-version",
         "streamwood-all-night-pop-version"
       ]
+    },
+    {
+      "id": "katie-8b44fb",
+      "user": true,
+      "owner": "5fab77805860e5feec59ed3c009fd8ee",
+      "created": "2026-10-05",
+      "name": "Katie",
+      "songs": [
+        "2ks",
+        "they-call-me-the-craig"
+      ],
+      "by": "Craig",
+      "updated": "2026-10-05T00:44:27.097Z"
     }
   ],
   "youtubePlaylists": [
