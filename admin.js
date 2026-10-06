@@ -110,6 +110,128 @@ async function enterAdmin() {
   await connect();
   show('admin');
   await refresh();
+  initStats();
+}
+
+// ---------- Stats (play counts kept by the playlist helper) ----------
+const STATS_ME = 'stats-me-v1';
+let statsData = null;
+function initStats() {
+  // The first time the admin page is opened on a device, mark that device as "me".
+  try {
+    if (localStorage.getItem(STATS_ME) === null) {
+      localStorage.setItem(STATS_ME, '1');
+      say('#stats-note', "This device is now marked as you, so your plays here won't count.", 'ok');
+    }
+    $('#stats-me').checked = localStorage.getItem(STATS_ME) === '1';
+  } catch {}
+  loadStats();
+}
+$('#stats-me').onchange = (e) => { try { localStorage.setItem(STATS_ME, e.target.checked ? '1' : '0'); } catch {} };
+$('#stats-load').onclick = () => loadStats();
+
+async function loadStats() {
+  const api = current?.community?.api;
+  if (!api) { say('#stats-note', 'Stats need the playlist helper. Set it up under "Playlists from the app" first.'); return; }
+  $('#stats-load').disabled = true;
+  try {
+    const res = await fetch(`${api.replace(/\/+$/, '')}/stats?tz=${new Date().getTimezoneOffset()}`, {
+      headers: { Authorization: `Bearer ${token}` }, cache: 'no-store',
+    });
+    const body = await res.json().catch(() => ({}));
+    if (res.status === 501) { say('#stats-note', 'Play counting is not set up yet. Follow "Play counts" in worker/SETUP.md (about 5 minutes).'); return; }
+    if (res.status === 404 || res.status === 405) { say('#stats-note', 'Your Cloudflare helper needs the newer code. Paste the latest worker/playlist-worker.js into it and Deploy.', 'err'); return; }
+    if (!res.ok || !body.ok) throw new Error(body.error || `Stats error ${res.status}`);
+    statsData = body;
+    renderStats();
+  } catch (e) {
+    say('#stats-note', e.message === 'Failed to fetch' ? "Couldn't reach the helper. Check its address and that it's deployed." : e.message, 'err');
+  } finally { $('#stats-load').disabled = false; }
+}
+
+function renderStats() {
+  const s = statsData;
+  const t = s.totals || {};
+  const fmtN = (n) => Number(n || 0).toLocaleString();
+  $('#st-7').textContent = fmtN(t.plays7);
+  $('#st-30').textContent = fmtN(t.plays30);
+  $('#st-all').textContent = fmtN(t.plays);
+  $('#st-dev').textContent = fmtN(t.devices30);
+  $('#stats-body').hidden = false;
+  if (!t.plays) say('#stats-note', 'No plays from other people yet. Counting starts once someone plays a song for 30 seconds.');
+  else if (!$('#stats-note').classList.contains('ok')) say('#stats-note', `Updated ${new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}.`);
+
+  // Plays per day: 30 bars, oldest -> today (local days).
+  const offset = new Date().getTimezoneOffset();
+  const today = Math.floor((s.now - offset * 60000) / 864e5);
+  const byDay = new Map((s.daily || []).map((r) => [Number(r.d), Number(r.plays)]));
+  const days = Array.from({ length: 30 }, (_, k) => today - 29 + k);
+  const max = Math.max(1, ...days.map((d) => byDay.get(d) || 0));
+  const dateOf = (d) => new Date(d * 864e5 + offset * 60000);
+  const label = (d) => dateOf(d).toLocaleDateString([], { month: 'short', day: 'numeric' });
+  const chart = $('#st-chart');
+  chart.replaceChildren();
+  const maxLabel = document.createElement('span');
+  maxLabel.className = 'max';
+  maxLabel.textContent = `${max} play${max === 1 ? '' : 's'}`;
+  chart.append(maxLabel);
+  const tip = $('#st-tip');
+  days.forEach((d) => {
+    const n = byDay.get(d) || 0;
+    const bar = document.createElement('div');
+    bar.className = 'bar' + (n ? '' : ' zero');
+    const fill = document.createElement('i');
+    fill.style.height = `${(n / max) * 100}%`;
+    bar.append(fill);
+    const text = `${dateOf(d).toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' })}: ${n} play${n === 1 ? '' : 's'}`;
+    bar.setAttribute('aria-label', text);
+    const showTip = (e) => {
+      chart.querySelectorAll('.bar.active').forEach((b) => b.classList.remove('active'));
+      bar.classList.add('active');
+      tip.textContent = text;
+      tip.hidden = false;
+      const r = bar.getBoundingClientRect();
+      tip.style.left = `${Math.min(innerWidth - tip.offsetWidth - 8, Math.max(8, r.left + r.width / 2 - tip.offsetWidth / 2))}px`;
+      tip.style.top = `${Math.max(8, r.bottom - fill.offsetHeight - tip.offsetHeight - 8)}px`;
+    };
+    bar.addEventListener('pointerenter', showTip);
+    bar.addEventListener('pointerdown', showTip);
+    bar.addEventListener('pointerleave', () => { tip.hidden = true; bar.classList.remove('active'); });
+    chart.append(bar);
+  });
+  chart.setAttribute('aria-label', `Plays per day for the last 30 days, most in one day: ${max}`);
+  $('#st-first').textContent = label(days[0]);
+  $('#st-last').textContent = 'Today';
+
+  // By song
+  const titles = Object.fromEntries((current?.songs || []).map((x) => [x.id, x.title]));
+  const ago = (ms) => {
+    const m = Math.round((s.now - ms) / 60000);
+    if (m < 60) return `${Math.max(1, m)} min ago`;
+    const h = Math.round(m / 60);
+    if (h < 24) return `${h} hr ago`;
+    const dd = Math.round(h / 24);
+    return dd === 1 ? 'yesterday' : `${dd} days ago`;
+  };
+  const tbody = $('#st-songs');
+  tbody.replaceChildren();
+  const rows = s.songs || [];
+  if (!rows.length) {
+    const tr = document.createElement('tr');
+    tr.innerHTML = '<td colspan="5" style="color:var(--muted)">No plays yet.</td>';
+    tbody.append(tr);
+  }
+  rows.forEach((r) => {
+    const tr = document.createElement('tr');
+    const cells = [titles[r.song] || r.song, fmtN(r.plays30), fmtN(r.plays), fmtN(r.devices), r.last ? ago(r.last) : ''];
+    cells.forEach((v, i) => {
+      const td = document.createElement('td');
+      td.textContent = v;
+      if (i >= 1 && i <= 3) td.className = 'num';
+      tr.append(td);
+    });
+    tbody.append(tr);
+  });
 }
 
 $('#setup-save').onclick = async () => {

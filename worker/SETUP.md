@@ -51,6 +51,22 @@ About a minute later, a **+ New playlist** button appears on the Playlists tab f
 
 ---
 
+## 5. Play counts (optional, about 5 minutes)
+
+Adds a **Stats** section to the admin page: plays per song, plays per day, and how many different devices are listening.
+
+**What's stored:** for each play, the song, the time, and a random device code. No names, emails or locations. **Cost:** none. On the free plan, going over a limit just pauses counting until the next day; Cloudflare never bills a free account for it.
+
+1. In Cloudflare: **Storage & databases → D1 SQL database → Create database**. Name it `craigs-songs-stats` → **Create**. You don't need to add any tables; the helper creates its own.
+2. Open your **craigs-songs-playlists** Worker → **Settings** → **Bindings** → **Add** → **D1 database**.
+   - **Variable name:** `DB` (exactly that, in capitals)
+   - **D1 database:** `craigs-songs-stats`
+   - **Deploy** / **Save**.
+3. Make sure the Worker has the latest code: **Edit code**, paste the whole current `worker/playlist-worker.js`, then **Deploy**.
+4. Open the app's **Admin** page. The **Stats** section is at the top. The first time you open Admin on a device, that device is marked as you, so your own plays don't count. Open Admin once on each of your phones and computers, or tick **Don't count plays from this device** there.
+
+A song counts as played after 30 seconds (or half of a short song). The same song on the same device within a minute counts once. Only the admin page, using your GitHub key, can read the stats.
+
 ### Managing playlists people make
 
 - They show up in the admin page's **Playlists** list, with "by …" if the person gave a name.

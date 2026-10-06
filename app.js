@@ -112,6 +112,33 @@ function selectedInOrder() {
     .filter((id) => selected.has(id) && !seen.has(id) && seen.add(id));
 }
 
+// ---------- play counts (only if the playlist helper is connected) ----------
+// A play counts once 30 seconds (or half of a short song) has played. Devices marked
+// "me" on the admin page never send anything. Fire-and-forget: if the helper is down
+// or over a free limit, nothing changes for the listener.
+const STATS_DEVICE = 'stats-device-v1';
+const STATS_ME = 'stats-me-v1';
+let playCounted = false;
+function statsDevice() {
+  try {
+    let id = localStorage.getItem(STATS_DEVICE);
+    if (!id) {
+      id = Array.from(crypto.getRandomValues(new Uint8Array(16)), (b) => b.toString(16).padStart(2, '0')).join('');
+      localStorage.setItem(STATS_DEVICE, id);
+    }
+    return id;
+  } catch { return null; }
+}
+function countPlay(song) {
+  const api = data?.community?.api;
+  if (!api || !song) return;
+  try { if (localStorage.getItem(STATS_ME) === '1') return; } catch {}
+  const device = statsDevice();
+  if (!device) return;
+  // text/plain body = no CORS preflight; keepalive lets it finish even if the app is closed.
+  fetch(api.replace(/\/+$/, '') + '/play', { method: 'POST', body: JSON.stringify({ song: song.id, device }), keepalive: true }).catch(() => {});
+}
+
 // ---------- shuffle / repeat ----------
 const MODES = 'songs-modes-v1';
 let modes = { shuffle: false, repeat: 'off' }; // repeat: off | all | one
@@ -568,6 +595,7 @@ function playList(list, i, src = null) {
 }
 
 function load(i) {
+  playCounted = false;
   if (typeof SP !== 'undefined') SP.yieldToLocal();
   index = (i + queue.length) % queue.length;
   const song = queue[index];
@@ -631,11 +659,16 @@ $('#shuffle-all').onclick = () => playList(shuffle(filtered()), 0);
 audio.addEventListener('play', () => { if (typeof SP !== 'undefined') SP.yieldToLocal(); $('#toggle').textContent = '⏸'; markPlaying(); });
 audio.addEventListener('pause', () => { $('#toggle').textContent = '▶'; markPlaying(); });
 audio.addEventListener('ended', () => {
+  playCounted = false;
   if (modes.repeat === 'one') { audio.currentTime = 0; audio.play().catch(() => {}); return; }
   if (index < queue.length - 1) next();
   else if (modes.repeat === 'all') load(0);
 });
 audio.addEventListener('timeupdate', () => {
+  if (!playCounted && audio.duration && audio.currentTime >= Math.min(30, audio.duration / 2)) {
+    playCounted = true;
+    countPlay(queue[index]);
+  }
   const d = audio.duration || 0;
   $('#np-time').textContent = `${fmt(audio.currentTime)} / ${fmt(d)}`;
   if (d && !seeking) $('#seek').value = (audio.currentTime / d) * 100;

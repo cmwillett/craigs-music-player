@@ -46,6 +46,31 @@
     .pl-songs li button { width: 34px; height: 34px; border-radius: 8px; background: var(--card-2); }
     .pl-add, .edit-row select { width: 100%; margin-top: 8px; padding: 12px; border-radius: 10px; border: 1px solid #3a3f4c; background: var(--bg); color: var(--text); font: inherit; }
     .check { display: flex; align-items: center; gap: 8px; margin-top: 12px; color: var(--text); font-size: .95rem; }
+    .stats-head { display: flex; align-items: center; justify-content: space-between; }
+    .stats-refresh { padding: 7px 14px; border-radius: 999px; background: var(--card-2); font-weight: 600; font-size: .85rem; }
+    .tiles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-top: 10px; }
+    @media (min-width: 560px) { .tiles { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+    .tile { background: var(--bg); border-radius: 12px; padding: 12px; }
+    .tile-num { font-size: 1.7rem; font-weight: 800; line-height: 1.1; font-variant-numeric: tabular-nums; }
+    .tile-label { color: var(--muted); font-size: .8rem; margin-top: 2px; }
+    .stats-sub { font-size: .9rem; color: var(--muted); margin: 18px 0 8px; font-weight: 600; }
+    .chart { position: relative; height: 120px; display: flex; align-items: flex-end; gap: 2px; border-bottom: 1px solid #3a3f4c; padding-top: 14px; }
+    .chart .bar { flex: 1; min-width: 0; height: 100%; display: flex; align-items: flex-end; cursor: default; }
+    .chart .bar i { display: block; width: 100%; background: #b8841f; border-radius: 4px 4px 0 0; min-height: 0; }
+    .chart .bar.zero i { background: transparent; }
+    .chart .bar:hover i, .chart .bar.active i { background: var(--accent); }
+    .chart .max { position: absolute; top: 0; left: 0; font-size: .7rem; color: var(--muted); }
+    .chart-axis { display: flex; justify-content: space-between; color: var(--muted); font-size: .75rem; margin-top: 4px; }
+    .chart-tip { position: fixed; z-index: 30; pointer-events: none; background: #2f3442; color: var(--text); border-radius: 8px; padding: 6px 10px; font-size: .8rem; box-shadow: 0 6px 16px rgba(0,0,0,.4); white-space: nowrap; }
+    .table-wrap { overflow-x: auto; }
+    .stats-table { width: 100%; border-collapse: collapse; font-size: .88rem; }
+    .stats-table th { text-align: left; color: var(--muted); font-weight: 600; font-size: .78rem; padding: 6px 6px; border-bottom: 1px solid #3a3f4c; white-space: nowrap; }
+    .stats-table td { padding: 8px 6px; border-bottom: 1px solid #2a2e38; }
+    .stats-table .num { text-align: right; font-variant-numeric: tabular-nums; }
+    .stats-table td:first-child { min-width: 130px; font-weight: 600; }
+    .stats-table th:not(:first-child), .stats-table td:not(:first-child) { white-space: nowrap; }
+    @media (max-width: 480px) { .stats-table th:nth-child(3), .stats-table td:nth-child(3) { display: none; } }
+    .stats-table td:last-child { color: var(--muted); white-space: nowrap; }
     .btns { display: flex; gap: 8px; margin-top: 12px; }
     .btns button { flex: 1; padding: 10px; border-radius: 10px; background: var(--card-2); font-weight: 600; }
   </style>
@@ -82,6 +107,33 @@
 
     <!-- Admin tools -->
     <section id="admin" hidden>
+      <div class="card" id="stats-card">
+        <div class="stats-head">
+          <h2 style="margin:0;color:var(--text)">Stats</h2>
+          <button id="stats-load" type="button" class="stats-refresh">Refresh</button>
+        </div>
+        <p id="stats-note" class="hint"></p>
+        <div id="stats-body" hidden>
+          <div class="tiles">
+            <div class="tile"><div class="tile-num" id="st-7">0</div><div class="tile-label">plays, last 7 days</div></div>
+            <div class="tile"><div class="tile-num" id="st-30">0</div><div class="tile-label">plays, last 30 days</div></div>
+            <div class="tile"><div class="tile-num" id="st-all">0</div><div class="tile-label">plays, all time</div></div>
+            <div class="tile"><div class="tile-num" id="st-dev">0</div><div class="tile-label">listeners, last 30 days</div></div>
+          </div>
+          <h3 class="stats-sub">Plays per day, last 30 days</h3>
+          <div class="chart" id="st-chart" role="img"></div>
+          <div class="chart-axis"><span id="st-first"></span><span id="st-last"></span></div>
+          <div id="st-tip" class="chart-tip" hidden></div>
+          <h3 class="stats-sub">By song</h3>
+          <div class="table-wrap"><table class="stats-table">
+            <thead><tr><th>Song</th><th class="num">30 days</th><th class="num">All time</th><th class="num">Listeners</th><th>Last</th></tr></thead>
+            <tbody id="st-songs"></tbody>
+          </table></div>
+        </div>
+        <label class="check" style="margin-top:14px"><input id="stats-me" type="checkbox"> Don't count plays from this device (it's me)</label>
+        <p class="hint" style="margin-top:4px">Turn this on for each of your own phones and computers so the numbers are only other people. "Listeners" = different devices.</p>
+      </div>
+
       <div class="card">
         <h2 style="margin-top:0;color:var(--text)">Add a song</h2>
         <label>Title</label>
