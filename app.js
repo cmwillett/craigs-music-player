@@ -246,16 +246,16 @@ $('#sort').onchange = (e) => { view.sort = e.target.value; saveView(); renderSon
 
 // ---------- song rows ----------
 function songRow(song, list, src = null) {
-  const tags = (song.tags || []).map((t) => el('span', { className: 'tag', textContent: t }));
-  const text = el('div', { style: 'min-width:0;flex:1' },
-    el('div', { className: 'title' }, isNew(song) ? el('span', { className: 'new-badge', textContent: 'NEW' }) : null, song.title),
-    el('div', { className: 'now', hidden: true }));
-  if (song.description) text.append(el('div', { className: 'desc', textContent: song.description }));
-  if (tags.length) text.append(el('div', { className: 'meta', style: 'margin-top:4px' }, tags));
-  else if (!song.description) text.append(el('div', { className: 'meta', textContent: 'Tap to play' }));
+  const cats = (song.tags || []).join(' · ');
+  const text = el('div', { className: 'row-text' },
+    el('div', { className: 'title' },
+      isNew(song) ? el('span', { className: 'new-dot', title: 'New', 'aria-label': 'New' }) : null,
+      song.title),
+    el('div', { className: 'now', hidden: true }),
+    cats ? el('div', { className: 'meta row-cats', textContent: cats }) : null);
 
   const check = el('span', { className: 'sel-box', innerHTML: '<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>' });
-  const main = el('button', { className: 'main' }, check, coverImg(song), text);
+  const main = el('button', { className: 'main' }, check, coverImg(song, 'cover row-cover'), text);
   main.onclick = () => {
     if (selecting) { toggleSelected(song.id); return; }
     // Tapping the song that's already loaded pauses/resumes instead of restarting it.
@@ -263,32 +263,58 @@ function songRow(song, list, src = null) {
     playList(list, list.indexOf(song), src);
   };
 
-  const yt = el('a', {
-    className: 'yt' + (song.youtube ? '' : ' disabled'),
-    textContent: '▶ Lyrics',
-    href: song.youtube || '#',
-    target: '_blank',
-    rel: 'noopener',
-    title: song.youtube ? 'Watch the lyric video' : 'No video yet',
-  });
-  if (song.youtube) yt.onclick = (e) => { if (openVideo(song.youtube, song.title)) e.preventDefault(); };
-  const share = el('button', { className: 'share-btn', title: 'Share this song', innerHTML: SHARE_ICON });
-  share.setAttribute('aria-label', `Share ${song.title}`);
-  share.onclick = () => shareSong(song);
-  const li = el('li', { className: 'row' + (selected.has(song.id) ? ' selected' : '') }, main, el('div', { className: 'row-actions' }, yt, share));
+  const more = el('button', { className: 'more-btn', title: 'Details', innerHTML: '<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><circle cx="5" cy="12" r="2" fill="currentColor"/><circle cx="12" cy="12" r="2" fill="currentColor"/><circle cx="19" cy="12" r="2" fill="currentColor"/></svg>' });
+  more.setAttribute('aria-label', `More about ${song.title}`);
+  more.onclick = () => openSongSheet(song, list, src);
+  const li = el('li', { className: 'row slim' + (selected.has(song.id) ? ' selected' : '') }, main, more);
   li.dataset.id = song.id;
-
-  // "more" toggle for long descriptions
-  if (song.description && song.description.length > 80) {
-    const more = el('span', { className: 'more', textContent: 'More', role: 'button', tabIndex: 0 });
-    more.onclick = (e) => {
-      e.stopPropagation();
-      li.classList.toggle('expanded');
-      more.textContent = li.classList.contains('expanded') ? 'Less' : 'More';
-    };
-    text.insertBefore(more, text.children[3] || null);
-  }
   return li;
+}
+
+// ---------- song details panel (⋯ on a song, or tap the player bar) ----------
+function openSongSheet(song, list = null, src = null) {
+  const box = $('#sheet-body');
+  box.replaceChildren();
+  const isCurrent = queue[index]?.id === song.id && !!audio.src && !(typeof SP !== 'undefined' && SP.active());
+  const playing = isCurrent && !audio.paused;
+  const big = coverImg(song, 'cover sheet-cover');
+  const head = el('div', { className: 'sheet-head' }, big,
+    el('div', { className: 'sheet-titles' },
+      isNew(song) ? el('span', { className: 'new-badge', textContent: 'NEW' }) : null,
+      el('h2', { className: 'sheet-title', id: 'sheet-title', textContent: song.title }),
+      (song.tags || []).length ? el('div', { className: 'sheet-tags' }, (song.tags || []).map((t) => el('span', { className: 'tag', textContent: t }))) : null));
+  box.append(head);
+  if (song.description) box.append(el('p', { className: 'sheet-desc', textContent: song.description }));
+
+  const btn = (label, cls, fn, disabled = false) => {
+    const b = el('button', { className: 'sheet-btn ' + cls, innerHTML: label, disabled });
+    b.onclick = fn;
+    return b;
+  };
+  const actions = el('div', { className: 'sheet-actions' });
+  actions.append(btn(playing ? '⏸&nbsp; Pause' : (isCurrent ? '▶&nbsp; Resume' : '▶&nbsp; Play'), 'primary-btn', () => {
+    closeSongSheet();
+    if (isCurrent) { audio.paused ? audio.play() : audio.pause(); return; }
+    const l = list && list.includes(song) ? list : filtered().includes(song) ? filtered() : [song];
+    playList(l, l.indexOf(song), list ? src : null);
+  }));
+  actions.append(btn('🎬&nbsp; Watch lyric video', 'yt-btn', () => {
+    closeSongSheet();
+    if (!openVideo(song.youtube, song.title)) window.open(song.youtube, '_blank', 'noopener');
+  }, !song.youtube));
+  actions.append(btn(SHARE_ICON + '&nbsp; Share', '', () => shareSong(song)));
+  if (typeof CM !== 'undefined' && data?.community?.api) {
+    actions.append(btn('➕&nbsp; Add to playlist', '', () => { closeSongSheet(); CM.pickPlaylist([song.id]); }));
+  }
+  box.append(actions);
+  if (!song.youtube) box.append(el('p', { className: 'sheet-note', textContent: 'No lyric video for this song yet.' }));
+
+  $('#song-sheet').hidden = false;
+  document.body.classList.add('modal-open');
+}
+function closeSongSheet() {
+  $('#song-sheet').hidden = true;
+  document.body.classList.remove('modal-open');
 }
 
 function renderSongs() {
@@ -644,6 +670,17 @@ $('#select-btn').onclick = () => setSelecting(!selecting);
 $('#sel-cancel').onclick = () => setSelecting(false);
 $('#sel-add').onclick = () => { if (selected.size && typeof CM !== 'undefined') CM.pickPlaylist(selectedInOrder()); };
 document.querySelectorAll('.tab').forEach((t) => t.addEventListener('click', () => { if (selecting) setSelecting(false); }));
+$('#sheet-close').onclick = closeSongSheet;
+$('#song-sheet').addEventListener('click', (e) => { if (e.target.id === 'song-sheet') closeSongSheet(); });
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !$('#song-sheet').hidden) closeSongSheet(); });
+// Tap the song info in the player bar to see that song's details.
+const openNowPlaying = () => {
+  if (typeof SP !== 'undefined' && SP.active()) return; // Spotify songs aren't ours
+  const song = queue[index];
+  if (song) openSongSheet(song, queue, source);
+};
+$('#np-cover').addEventListener('click', openNowPlaying);
+document.querySelector('.np-text').addEventListener('click', openNowPlaying);
 $('#shuffle-mode').onclick = toggleShuffle;
 $('#repeat-mode').onclick = cycleRepeat;
 updateModeButtons();

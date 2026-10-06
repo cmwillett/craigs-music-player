@@ -50,8 +50,8 @@
       </div>
       <div class="filters">
         <div id="chips" class="chips" role="group" aria-label="Filter by category"></div>
-        <label class="sort">Sort
-          <select id="sort">
+        <label class="sort"><span class="sort-label">Sort</span>
+          <select id="sort" aria-label="Sort songs">
             <option value="newest">Newest</option>
             <option value="oldest">Oldest</option>
             <option value="title">Title A–Z</option>
@@ -204,6 +204,13 @@
         <div id="help-body"></div>
         <p id="help-version" class="help-version"></p>
       </div>
+    </div>
+  </div>
+
+  <div id="song-sheet" class="modal sheet" hidden role="dialog" aria-modal="true" aria-labelledby="sheet-title">
+    <div class="modal-box sheet-box">
+      <button id="sheet-close" class="modal-x sheet-x" aria-label="Close">✕</button>
+      <div id="sheet-body" class="sheet-body"></div>
     </div>
   </div>
 

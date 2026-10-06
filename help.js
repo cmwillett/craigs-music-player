@@ -46,6 +46,7 @@ const HELP = (() => {
         <li>The <b>player bar</b> at the bottom has back, play/pause and skip. Drag the line above it to jump around in a song.</li>
         <li><b>Shuffle</b> (crossed arrows, left of the controls) mixes up what's left to play.</li>
         <li><b>Repeat</b> (circle arrows, right of the controls) cycles: off → repeat the list → repeat this song (shows a small "1").</li>
+        <li>Tap the <b>song name in the player bar</b> to see what's playing, with its description and lyric video.</li>
         <li>In the car: it plays over Bluetooth like any music app, with play, pause and skip on your lock screen and car display.</li>
       </ul>`,
     },
@@ -56,8 +57,8 @@ const HELP = (() => {
         <li><b>Search</b> box at the top of the Songs tab searches titles, descriptions and categories.</li>
         <li><b>Category buttons</b> (like Family or Friends) show just those songs. <b>All songs</b> shows everything.</li>
         <li><b>Sort</b>: Newest, Oldest, Title A–Z, or By category.</li>
-        <li>A gold <b>NEW</b> tag marks songs added in the last two weeks.</li>
-        <li>Long descriptions show <b>More</b>, so tap it to read the rest.</li>
+        <li>A small <b>gold dot</b> before a title means it was added in the last two weeks.</li>
+        <li>Tap <b>⋯</b> on a song to read its description and see more options.</li>
       </ul>`,
     },
     {
@@ -65,9 +66,9 @@ const HELP = (() => {
       title: '🎬 Watch lyric videos',
       show: has.youtube,
       html: `<ul>
-        <li>Tap <b>▶ Lyrics</b> on a song to watch its lyric video right in the app. If music is playing, it pauses.</li>
+        <li>Tap <b>⋯</b> on a song → <b>Watch lyric video</b> to watch it right in the app. If music is playing, it pauses.</li>
         <li>Close it with <b>✕</b> or by tapping outside the video.</li>
-        <li>Grayed-out Lyrics means that song doesn't have a video yet.</li>
+        <li>If the button is grayed out, that song doesn't have a video yet.</li>
         <li>More lyric-video playlists are under <b>Playlists → YouTube</b>.</li>
       </ul>`,
     },
@@ -75,7 +76,7 @@ const HELP = (() => {
       id: 'share',
       title: '📤 Share a song',
       html: `<ul>
-        <li>Tap the <b>share button</b> (box with an up arrow) next to a song.</li>
+        <li>Tap <b>⋯</b> on a song → <b>Share</b>.</li>
         <li>On a phone, pick Messages or any app; on a computer, the link is copied, so paste it anywhere.</li>
         <li>Whoever opens the link lands right on that song with a <b>▶ Play</b> button.</li>
       </ul>`,
