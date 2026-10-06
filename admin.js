@@ -146,7 +146,16 @@ $('#stats-load').onclick = () => loadStats();
 async function loadStats() {
   const api = current?.community?.api;
   if (!api) { say('#stats-note', 'Stats need the playlist helper. Set it up under "Playlists from the app" first.'); return; }
-  $('#stats-load').disabled = true;
+  const btn = $('#stats-load');
+  const lbl = btn.querySelector('.lbl');
+  btn.disabled = true;
+  btn.classList.remove('done');
+  btn.classList.add('loading');
+  lbl.textContent = 'Refreshing…';
+  $('#stats-body').classList.add('loading');
+  const started = Date.now();
+  const settle = () => new Promise((r) => setTimeout(r, Math.max(0, 600 - (Date.now() - started)))); // long enough to see
+  let ok = false;
   try {
     const res = await fetch(`${api.replace(/\/+$/, '')}/stats?tz=${new Date().getTimezoneOffset()}`, {
       headers: { Authorization: `Bearer ${token}` }, cache: 'no-store',
@@ -155,11 +164,29 @@ async function loadStats() {
     if (res.status === 501) { say('#stats-note', 'Play counting is not set up yet. Follow "Play counts" in worker/SETUP.md (about 5 minutes).'); return; }
     if (res.status === 404 || res.status === 405) { say('#stats-note', 'Your Cloudflare helper needs the newer code. Paste the latest worker/playlist-worker.js into it and Deploy.', 'err'); return; }
     if (!res.ok || !body.ok) throw new Error(body.error || `Stats error ${res.status}`);
+    await settle();
+    const before = statsData ? ['#st-7', '#st-30', '#st-all', '#st-dev'].map((s) => $(s).textContent) : null;
     statsData = body;
     renderStats();
+    if (before) ['#st-7', '#st-30', '#st-all', '#st-dev'].forEach((s, i) => {
+      const tile = $(s).parentElement;
+      if ($(s).textContent !== before[i]) { tile.classList.remove('changed'); void tile.offsetWidth; tile.classList.add('changed'); }
+    });
+    $('#stats-updated').textContent = `Updated ${new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}`;
+    ok = true;
   } catch (e) {
     say('#stats-note', e.message === 'Failed to fetch' ? "Couldn't reach the helper. Check its address and that it's deployed." : e.message, 'err');
-  } finally { $('#stats-load').disabled = false; }
+  } finally {
+    await settle();
+    btn.classList.remove('loading');
+    $('#stats-body').classList.remove('loading');
+    btn.disabled = false;
+    if (ok) {
+      btn.classList.add('done');
+      lbl.textContent = 'Updated ✓';
+      setTimeout(() => { btn.classList.remove('done'); lbl.textContent = 'Refresh'; }, 1500);
+    } else lbl.textContent = 'Refresh';
+  }
 }
 
 function renderStats() {
@@ -172,7 +199,7 @@ function renderStats() {
   $('#st-dev').textContent = fmtN(t.devices30);
   $('#stats-body').hidden = false;
   if (!t.plays) say('#stats-note', 'No plays from other people yet. Counting starts once someone plays a song for 30 seconds.');
-  else if (!$('#stats-note').classList.contains('ok')) say('#stats-note', `Updated ${new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}.`);
+  else if (!$('#stats-note').classList.contains('ok')) say('#stats-note', '');
 
   // Plays per day: 30 bars, oldest -> today (local days).
   const offset = new Date().getTimezoneOffset();

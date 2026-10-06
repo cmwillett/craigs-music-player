@@ -47,7 +47,18 @@
     .pl-add, .edit-row select { width: 100%; margin-top: 8px; padding: 12px; border-radius: 10px; border: 1px solid #3a3f4c; background: var(--bg); color: var(--text); font: inherit; }
     .check { display: flex; align-items: center; gap: 8px; margin-top: 12px; color: var(--text); font-size: .95rem; }
     .stats-head { display: flex; align-items: center; justify-content: space-between; }
-    .stats-refresh { padding: 7px 14px; border-radius: 999px; background: var(--card-2); font-weight: 600; font-size: .85rem; }
+    .stats-right { display: flex; align-items: center; gap: 10px; }
+    .stats-updated { color: var(--muted); font-size: .78rem; }
+    .stats-refresh { display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; border-radius: 999px; background: var(--card-2); font-weight: 600; font-size: .85rem; min-width: 104px; justify-content: center; }
+    .stats-refresh:disabled { opacity: 1; }
+    .stats-refresh.loading .spin-icon { animation: spin .8s linear infinite; }
+    .stats-refresh.done { color: #7ee787; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    #stats-body { transition: opacity .2s; }
+    #stats-body.loading { opacity: .45; }
+    .tile.changed { animation: tile-flash 1.2s ease-out; }
+    @keyframes tile-flash { 0% { box-shadow: 0 0 0 2px var(--accent); } 100% { box-shadow: 0 0 0 2px transparent; } }
+    @media (prefers-reduced-motion: reduce) { .stats-refresh.loading .spin-icon, .tile.changed { animation: none; } }
     .tiles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-top: 10px; }
     @media (min-width: 560px) { .tiles { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
     .tile { background: var(--bg); border-radius: 12px; padding: 12px; }
@@ -123,7 +134,10 @@
       <div class="card" id="stats-card">
         <div class="stats-head">
           <h2 style="margin:0;color:var(--text)">Stats</h2>
-          <button id="stats-load" type="button" class="stats-refresh">Refresh</button>
+          <div class="stats-right">
+            <span id="stats-updated" class="stats-updated"></span>
+            <button id="stats-load" type="button" class="stats-refresh" aria-live="polite"><svg class="spin-icon" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M20 11a8 8 0 1 0-2.3 5.7M20 4v7h-7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="lbl">Refresh</span></button>
+          </div>
         </div>
         <p id="stats-note" class="hint"></p>
         <div id="stats-body" hidden>
