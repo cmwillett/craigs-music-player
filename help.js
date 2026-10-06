@@ -93,7 +93,8 @@ const HELP = (() => {
           <li>Or tap one of <b>your</b> playlists to add the songs to it.</li></ul></li>
         <li>Tap <b>✕</b> or <b>Cancel</b> to stop selecting.</li>
       </ol>
-      <p>Tip: search or filter first (e.g. tap <b>Family</b>), then select.</p>`,
+      <p>Tip: search or filter first (e.g. tap <b>Family</b>), then select.</p>
+      <p><b>Just one song?</b> Tap <b>⋯</b> on it → <b>Add to playlist</b>.</p>`,
     },
     {
       id: 'pl-new',
