@@ -106,9 +106,22 @@ function guessRepo() {
   return '';
 }
 
+// ---------- tabs: Stats (default) / Songs / Playlists / Settings ----------
+function showPanel(name) {
+  document.querySelectorAll('.atab').forEach((t) => {
+    const on = t.dataset.panel === name;
+    t.classList.toggle('active', on);
+    t.setAttribute('aria-selected', String(on));
+  });
+  document.querySelectorAll('.apanel').forEach((p) => { p.hidden = p.dataset.panel !== name; });
+  window.scrollTo(0, 0);
+}
+document.querySelectorAll('.atab').forEach((t) => { t.onclick = () => showPanel(t.dataset.panel); });
+
 async function enterAdmin() {
   await connect();
   show('admin');
+  showPanel('stats');
   await refresh();
   initStats();
 }
@@ -290,12 +303,27 @@ function queue(label, apply) {
   render();
 }
 
+function markTabs() {
+  const which = new Set(ops.map((o) => (o.tab || (String(o.id || '').startsWith('pl:') ? 'playlists' : o.id ? 'songs' : tabForLabel(o.label)))));
+  document.querySelectorAll('.atab').forEach((t) => {
+    let dot = t.querySelector('.dot');
+    if (which.has(t.dataset.panel)) { if (!dot) { dot = document.createElement('span'); dot.className = 'dot'; t.append(dot); } }
+    else if (dot) dot.remove();
+  });
+}
+function tabForLabel(label = '') {
+  if (/^Add "/.test(label)) return 'songs';
+  if (/playlist/i.test(label) && !/helper|Client ID|from the app/i.test(label)) return 'playlists';
+  return 'settings';
+}
+
 function renderPending() {
   const bar = $('#pending');
   bar.hidden = !ops.length;
   $('#pending-count').textContent = `${ops.length} unsaved change${ops.length === 1 ? '' : 's'}`;
   const ul = $('#pending-list');
   ul.replaceChildren(...ops.map((o) => Object.assign(document.createElement('li'), { textContent: o.label })));
+  markTabs();
 }
 
 function render() {

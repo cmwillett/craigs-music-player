@@ -71,6 +71,11 @@
     .stats-table th:not(:first-child), .stats-table td:not(:first-child) { white-space: nowrap; }
     @media (max-width: 480px) { .stats-table th:nth-child(3), .stats-table td:nth-child(3) { display: none; } }
     .stats-table td:last-child { color: var(--muted); white-space: nowrap; }
+    .atabs { position: sticky; top: 0; z-index: 6; display: flex; gap: 4px; background: var(--card); border-radius: 12px; padding: 4px; margin: 4px 0 12px; box-shadow: 0 6px 14px rgba(0,0,0,.35); }
+    .atab { flex: 1; padding: 9px 4px; border-radius: 9px; color: var(--muted); font-weight: 600; font-size: .92rem; position: relative; }
+    .atab.active { background: var(--card-2); color: var(--text); box-shadow: 0 1px 4px rgba(0,0,0,.3); }
+    .atab .dot { position: absolute; top: 6px; right: 8px; width: 7px; height: 7px; border-radius: 50%; background: var(--accent); }
+    .apanel[hidden] { display: none; }
     .btns { display: flex; gap: 8px; margin-top: 12px; }
     .btns button { flex: 1; padding: 10px; border-radius: 10px; background: var(--card-2); font-weight: 600; }
   </style>
@@ -107,6 +112,14 @@
 
     <!-- Admin tools -->
     <section id="admin" hidden>
+      <nav class="atabs" role="tablist" aria-label="Admin sections">
+        <button class="atab active" data-panel="stats" role="tab">Stats</button>
+        <button class="atab" data-panel="songs" role="tab">Songs</button>
+        <button class="atab" data-panel="playlists" role="tab">Playlists</button>
+        <button class="atab" data-panel="settings" role="tab">Settings</button>
+      </nav>
+
+      <div class="apanel" data-panel="stats">
       <div class="card" id="stats-card">
         <div class="stats-head">
           <h2 style="margin:0;color:var(--text)">Stats</h2>
@@ -134,6 +147,9 @@
         <p class="hint" style="margin-top:4px">Turn this on for each of your own phones and computers so the numbers are only other people. "Listeners" = different devices.</p>
       </div>
 
+      </div>
+
+      <div class="apanel" data-panel="songs" hidden>
       <div class="card">
         <h2 style="margin-top:0;color:var(--text)">Add a song</h2>
         <label>Title</label>
@@ -156,7 +172,10 @@
       <h2>Edit songs</h2>
       <ul id="edit-list" class="list"></ul>
 
-      <h2>Playlists</h2>
+      </div>
+
+      <div class="apanel" data-panel="playlists" hidden>
+      <h2 style="margin-top:6px">App playlists</h2>
       <ul id="pl-edit-list" class="list"></ul>
       <button id="pl-new" class="primary" style="margin-top:8px;background:var(--card-2);color:var(--text)">+ New playlist</button>
 
@@ -168,6 +187,17 @@
         <div id="yt-msg" class="msg"></div>
       </div>
 
+      <div class="card">
+        <h2 style="margin-top:0;color:var(--text)">Spotify playlists</h2>
+        <p class="hint">One per line: <code>Name | link</code>. In Spotify: open the playlist → ⋯ → Share → Copy link to playlist.</p>
+        <textarea id="sp-lists" rows="4" style="width:100%;padding:12px;border-radius:10px;border:1px solid #3a3f4c;background:var(--bg);color:var(--text);font:inherit"></textarea>
+        <button id="sp-save" class="primary">Add to changes</button>
+        <div id="sp-msg" class="msg"></div>
+      </div>
+
+      </div>
+
+      <div class="apanel" data-panel="settings" hidden>
       <div class="card">
         <h2 style="margin-top:0;color:var(--text)">Playlists from the app</h2>
         <p class="hint">Lets anyone using the app make playlists (they can change only their own; you can manage all of them above). Needs the small Cloudflare helper. Follow <code>worker/SETUP.md</code> in your repo, then paste its address here.</p>
@@ -196,12 +226,6 @@
         <div id="sp-client-msg" class="msg"></div>
       </div>
 
-      <div class="card">
-        <h2 style="margin-top:0;color:var(--text)">Spotify playlists</h2>
-        <p class="hint">One per line: <code>Name | link</code>. In Spotify: open the playlist → ⋯ → Share → Copy link to playlist.</p>
-        <textarea id="sp-lists" rows="4" style="width:100%;padding:12px;border-radius:10px;border:1px solid #3a3f4c;background:var(--bg);color:var(--text);font:inherit"></textarea>
-        <button id="sp-save" class="primary">Add to changes</button>
-        <div id="sp-msg" class="msg"></div>
       </div>
 
       <p class="hint">Make as many edits as you like, then tap <strong>Save all</strong>. Changes go live on the site about a minute after saving.
