@@ -8,7 +8,7 @@ Runs automatically on GitHub (see .github/workflows/sync-songs.yml) whenever
 you push new files to music/. You can also run it by hand: python tools/sync_songs.py
 
 The title comes from the filename: "good-dog-titus.mp3" -> "Good Dog Titus".
-Fix titles, descriptions, categories and YouTube links later in the admin page.
+Fix titles, descriptions, categories and lyrics later in the admin page.
 """
 import json
 from datetime import date
@@ -53,7 +53,7 @@ def main():
         while sid in known_ids:
             sid += '-2'
         songs.append({'id': sid, 'title': title_from(mp3.stem), 'file': rel,
-                      'cover': '', 'youtube': '', 'tags': [], 'added': date.today().isoformat()})
+                      'cover': '', 'tags': [], 'added': date.today().isoformat()})
         known_ids.add(sid)
         added.append(rel)
 

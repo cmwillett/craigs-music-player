@@ -73,7 +73,6 @@
         <div class="subtabs" role="tablist" aria-label="Playlist type">
           <button class="subtab active" data-sub="mine" role="tab">Playlists</button>
           <button class="subtab" data-sub="spotify" role="tab" hidden>Spotify</button>
-          <button class="subtab" data-sub="youtube" role="tab" hidden>YouTube</button>
         </div>
 
         <div class="subview" data-sub="mine">
@@ -105,10 +104,6 @@
           </div>
         </div>
 
-        <div class="subview" data-sub="youtube" hidden>
-          <p class="sub-hint">Lyric videos. Tap one to watch it here in the app.</p>
-          <ul id="yt-playlists" class="list"></ul>
-        </div>
       </div>
       <div id="playlist-detail" hidden>
         <button id="pl-back" class="back">← All playlists</button>
@@ -150,12 +145,10 @@
     <div class="modal-box">
       <div class="modal-head">
         <div id="video-title" class="modal-title"></div>
-        <button id="video-full" class="video-full" hidden>⛶ Full screen</button>
         <button id="video-close" class="modal-x" aria-label="Close">✕</button>
       </div>
       <div id="video-frame" class="video-frame"></div>
-      <p id="video-hint" class="video-hint" hidden>📱↻ Turn your phone sideways for bigger words</p>
-      <a id="video-open" class="modal-link" target="_blank" rel="noopener">Open in YouTube ↗</a>
+      <a id="video-open" class="modal-link" target="_blank" rel="noopener">Open in Spotify ↗</a>
     </div>
   </div>
 

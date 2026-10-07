@@ -2,7 +2,7 @@
 const $ = (s) => document.querySelector(s);
 const audio = $('#audio');
 
-let data = { songs: [], playlists: [], youtubePlaylists: [] };
+let data = { songs: [], playlists: [] };
 let queue = [];     // array of song objects
 let index = -1;     // position in queue
 
@@ -298,11 +298,6 @@ function openSongSheet(song, list = null, src = null) {
     const l = list && list.includes(song) ? list : filtered().includes(song) ? filtered() : [song];
     playList(l, l.indexOf(song), list ? src : null);
   }));
-  actions.append(btn('🎬&nbsp; Watch lyric video', 'yt-btn', () => {
-    closeSongSheet();
-    countPlay(song, 'view'); // lyric video opened (counted right away; the app is awake now)
-    if (!openVideo(song.youtube, song.title, { big: true })) window.open(song.youtube, '_blank', 'noopener');
-  }, !song.youtube));
   if (typeof LY !== 'undefined') {
     const ly = btn('📝&nbsp; Lyrics', 'ly-btn', () => { closeSongSheet(); LY.open(song, list, src); }, !song.lyrics);
     actions.append(ly);
@@ -316,7 +311,6 @@ function openSongSheet(song, list = null, src = null) {
     actions.append(btn('➕&nbsp; Add to playlist', '', () => { closeSongSheet(); CM.pickPlaylist([song.id]); }));
   }
   box.append(actions);
-  if (!song.youtube) box.append(el('p', { className: 'sheet-note', textContent: 'No lyric video for this song yet.' }));
 
   $('#song-sheet').hidden = false;
   document.body.classList.add('modal-open');
@@ -395,19 +389,6 @@ function renderPlaylists() {
   updateSubtabs();
   renderPlaylistDetail();
 
-  const yt = $('#yt-playlists');
-  yt.replaceChildren();
-  const ytLists = (data.youtubePlaylists || []).filter((p) => p.url);
-  if (!ytLists.length) yt.append(el('li', { className: 'empty', textContent: 'No YouTube playlists linked yet.' }));
-  ytLists.forEach((p) => {
-    const a = el('a', { className: 'row', href: p.url, target: '_blank', rel: 'noopener', style: 'text-decoration:none;color:inherit' },
-      el('div', { className: 'cover', style: 'background:#c4302b' }),
-      el('div', { className: 'title', textContent: p.name, style: 'flex:1' }),
-      el('span', { className: 'yt', textContent: '▶ Watch' }));
-    a.onclick = (e) => { if (openVideo(p.url, p.name)) e.preventDefault(); };
-    yt.append(el('li', {}, a));
-  });
-
   // Spotify playlists (added in the admin page) — tap to play inside the app.
   const sp = $('#sp-playlists');
   sp.replaceChildren();
@@ -428,14 +409,13 @@ function renderPlaylists() {
   });
 }
 
-// ---------- Playlists page sub-tabs: Playlists / Spotify / YouTube ----------
+// ---------- Playlists page sub-tabs: Playlists / Spotify ----------
 const SUBTAB = 'songs-subtab-v1';
 let subtab = (() => { try { return localStorage.getItem(SUBTAB) || 'mine'; } catch { return 'mine'; } })();
 function updateSubtabs() {
   const has = {
     mine: true,
     spotify: !!(data.spotify && data.spotify.clientId) || (data.spotifyPlaylists || []).some((p) => p.url),
-    youtube: (data.youtubePlaylists || []).some((p) => p.url),
   };
   if (!has[subtab]) subtab = 'mine';
   const visible = Object.values(has).filter(Boolean).length;
@@ -524,33 +504,7 @@ function markPlaying() {
   $('#np-source').hidden = !p;
 }
 
-// ---------- YouTube player (in-app) ----------
-// Turns any YouTube link (watch, youtu.be, shorts, embed, playlist) into an embed URL.
-function youtubeEmbed(url) {
-  let u;
-  try { u = new URL(url); } catch { return null; }
-  const host = u.hostname.replace(/^www\.|^m\.|^music\./, '');
-  let id = null;
-  const list = u.searchParams.get('list');
-  if (host === 'youtu.be') id = u.pathname.slice(1).split('/')[0];
-  else if (host === 'youtube.com' || host === 'youtube-nocookie.com') {
-    if (u.pathname === '/watch') id = u.searchParams.get('v');
-    else {
-      const m = u.pathname.match(/^\/(shorts|embed|live)\/([\w-]{6,})/);
-      if (m && m[2] !== 'videoseries') id = m[2];
-    }
-  } else return null;
-  const params = new URLSearchParams({ autoplay: '1', rel: '0', playsinline: '1' });
-  if (id && /^[\w-]{6,}$/.test(id)) {
-    if (list) params.set('list', list);
-    const t = parseInt(u.searchParams.get('t') || u.searchParams.get('start') || '0', 10);
-    if (t) params.set('start', String(t));
-    return `https://www.youtube-nocookie.com/embed/${id}?${params}`;
-  }
-  if (list) { params.set('list', list); return `https://www.youtube-nocookie.com/embed/videoseries?${params}`; }
-  return null;
-}
-
+// ---------- Spotify player (in-app, for shared playlists) ----------
 // Spotify link -> embed URL. Handles open.spotify.com/(intl-xx/)<type>/<id> and spotify:<type>:<id>.
 function spotifyEmbed(url) {
   const s = String(url || '').trim();
@@ -578,69 +532,18 @@ function openSpotify(url, title) {
     allow: 'autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture',
   });
   $('#video-frame').classList.add('spotify');
-  // A big close button that floats over the video while it's full screen.
-  const fsClose = el('button', { className: 'fs-close', textContent: '✕ Close', type: 'button' });
-  fsClose.onclick = () => closeVideo();
-  $('#video-frame').replaceChildren(frame, fsClose);
+  $('#video-frame').replaceChildren(frame);
   $('#video-modal').hidden = false;
   document.body.classList.add('modal-open');
   return true;
 }
 
-// Phones: make lyric videos big enough to read. Android -> real full screen, turned sideways.
-// iPhone can't do that for web pages, so we show a "turn your phone sideways" hint and the
-// video fills the screen in landscape (CSS below).
-const isPhoneLike = () => matchMedia('(pointer: coarse)').matches && Math.min(screen.width, screen.height) < 700;
-const isIOS_ = /iphone|ipod/i.test(navigator.userAgent);
-async function goFullscreen() {
-  const box = $('#video-frame');
-  try {
-    if (box.requestFullscreen) await box.requestFullscreen({ navigationUI: 'hide' });
-    else if (box.webkitRequestFullscreen) box.webkitRequestFullscreen();
-    else return false;
-    try { await screen.orientation.lock('landscape'); } catch (_) { /* not allowed on this device */ }
-    return true;
-  } catch (_) { return false; }
-}
-document.addEventListener('fullscreenchange', () => {
-  if (!document.fullscreenElement) { try { screen.orientation.unlock(); } catch (_) {} }
-});
-
-function openVideo(url, title, opts = {}) {
-  const src = youtubeEmbed(url);
-  if (!src) return false; // not a YouTube link we understand -> let the link open normally
-  if (!audio.paused) audio.pause();
-  $('#video-title').textContent = title || '';
-  $('#video-open').href = url;
-  $('#video-open').textContent = 'Open in YouTube ↗';
-  $('#video-frame').classList.remove('spotify');
-  const frame = el('iframe', {
-    src,
-    title: title || 'YouTube video',
-    allow: 'autoplay; encrypted-media; picture-in-picture; fullscreen',
-    allowFullscreen: true,
-    referrerPolicy: 'strict-origin-when-cross-origin',
-  });
-  const fsClose = el('button', { className: 'fs-close', textContent: '✕ Close', type: 'button' });
-  fsClose.onclick = () => closeVideo();
-  $('#video-frame').replaceChildren(frame, fsClose); // big close button shown over the video in full screen
-  $('#video-modal').hidden = false;
-  document.body.classList.add('modal-open');
-  const canFull = !!($('#video-frame').requestFullscreen || $('#video-frame').webkitRequestFullscreen);
-  $('#video-full').hidden = !canFull;
-  $('#video-hint').hidden = !(isPhoneLike() && (isIOS_ || !canFull));
-  // Lyric videos on a phone: go straight to full screen (must happen right inside the tap).
-  if (opts.big && isPhoneLike() && canFull && !isIOS_) goFullscreen();
-  return true;
-}
 function closeVideo() {
-  if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
   $('#video-frame').replaceChildren(); // removing the iframe stops the video
   $('#video-modal').hidden = true;
   document.body.classList.remove('modal-open');
 }
 $('#video-close').onclick = closeVideo;
-$('#video-full').onclick = () => { goFullscreen(); };
 $('#video-modal').addEventListener('click', (e) => { if (e.target.id === 'video-modal') closeVideo(); });
 document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !$('#video-modal').hidden) closeVideo(); });
 

@@ -147,8 +147,6 @@
             <div class="tile"><div class="tile-num" id="st-30">0</div><div class="tile-label">plays, last 30 days</div></div>
             <div class="tile"><div class="tile-num" id="st-all">0</div><div class="tile-label">plays, all time</div></div>
             <div class="tile"><div class="tile-num" id="st-dev">0</div><div class="tile-label">listeners, last 30 days</div></div>
-            <div class="tile"><div class="tile-num" id="st-v30">0</div><div class="tile-label">lyric videos, last 30 days</div></div>
-            <div class="tile"><div class="tile-num" id="st-vall">0</div><div class="tile-label">lyric videos, all time</div></div>
           </div>
           <h3 class="stats-sub">Plays per day, last 30 days</h3>
           <div class="chart" id="st-chart" role="img"></div>
@@ -156,7 +154,7 @@
           <div id="st-tip" class="chart-tip" hidden></div>
           <h3 class="stats-sub">By song</h3>
           <div class="table-wrap"><table class="stats-table">
-            <thead><tr><th>Song</th><th class="num">Plays 30d</th><th class="num">All time</th><th class="num">Videos</th><th class="num">Listeners</th><th>Last</th></tr></thead>
+            <thead><tr><th>Song</th><th class="num">Plays 30d</th><th class="num">All time</th><th class="num">Listeners</th><th>Last</th></tr></thead>
             <tbody id="st-songs"></tbody>
           </table></div>
         </div>
@@ -175,8 +173,6 @@
         <textarea id="add-desc" rows="2" maxlength="300" placeholder="Who it's for, what inspired it…"></textarea>
         <label>MP3 file</label>
         <input id="add-mp3" type="file" accept="audio/mpeg,.mp3">
-        <label>Lyric video on YouTube (optional)</label>
-        <input id="add-yt" type="url" placeholder="https://youtu.be/…">
         <label>Cover art (optional)</label>
         <input id="add-cover" type="file" accept="image/*">
         <label>Categories (optional, comma separated)</label>
@@ -195,14 +191,6 @@
       <h2 style="margin-top:6px">App playlists</h2>
       <ul id="pl-edit-list" class="list"></ul>
       <button id="pl-new" class="primary" style="margin-top:8px;background:var(--card-2);color:var(--text)">+ New playlist</button>
-
-      <div class="card">
-        <h2 style="margin-top:0;color:var(--text)">YouTube playlists</h2>
-        <p class="hint">One per line: <code>Name | link</code></p>
-        <textarea id="yt-lists" rows="4" style="width:100%;padding:12px;border-radius:10px;border:1px solid #3a3f4c;background:var(--bg);color:var(--text);font:inherit"></textarea>
-        <button id="yt-save" class="primary">Add to changes</button>
-        <div id="yt-msg" class="msg"></div>
-      </div>
 
       <div class="card">
         <h2 style="margin-top:0;color:var(--text)">Spotify playlists</h2>

@@ -73,6 +73,16 @@ const LY = (() => {
         const text = decodeText(body.subarray(textStart), enc).replace(/\u0000+$/, '').trim();
         if (text) return text;
       }
+      // Some tools store them as a custom text tag named "lyrics…" / "unsyncedlyrics" instead.
+      if (id === 'TXXX' && body.length > 2) {
+        const enc = body[0];
+        const descEnd = afterTerminator(body, 1, enc);
+        const desc = decodeText(body.subarray(1, descEnd), enc).replace(/\u0000/g, '').trim().toLowerCase();
+        if (/^(unsynced)?lyrics/.test(desc)) {
+          const text = decodeText(body.subarray(descEnd), enc).replace(/\u0000+$/, '').trim();
+          if (text) return text;
+        }
+      }
       i += 10 + size;
     }
     return '';

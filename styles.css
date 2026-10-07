@@ -289,7 +289,6 @@ body.selecting .row .now { display: none; }
 .subtab[hidden] { display: none; }
 .subtab.active { background: var(--card-2); color: var(--text); box-shadow: 0 1px 4px rgba(0,0,0,.3); }
 .subtab[data-sub="spotify"].active { color: #1ed760; }
-.subtab[data-sub="youtube"].active { color: #ff5c57; }
 .subview[hidden] { display: none; }
 .sub-hint { color: var(--muted); font-size: .85rem; margin: 8px 0; }
 .subview h2.first { margin-top: 12px; }
@@ -354,7 +353,6 @@ body.selecting .more-btn { visibility: hidden; }
 .sheet-btn { display: flex; align-items: center; justify-content: center; gap: 4px; padding: 13px; border-radius: 12px; background: var(--card-2); font-weight: 700; }
 .sheet-btn svg { vertical-align: -3px; }
 .sheet-btn.primary-btn { background: var(--accent); color: var(--accent-ink); }
-.sheet-btn.yt-btn:not(:disabled) { background: #c4302b; color: #fff; }
 .sheet-btn:disabled { opacity: .4; }
 .sheet-note { color: var(--muted); font-size: .8rem; text-align: center; margin: 8px 0 0; }
 
@@ -370,29 +368,6 @@ body.selecting .more-btn { visibility: hidden; }
 .chip:not(:first-child) { text-transform: capitalize; }
 .group-title { text-transform: capitalize; }
 
-/* ---------- bigger lyric videos on phones ---------- */
-.video-full { flex: none; padding: 8px 12px; border-radius: 999px; background: var(--card-2); font-weight: 600; font-size: .85rem; }
-.video-full[hidden], .video-hint[hidden] { display: none; }
-.video-hint { margin: 0; padding: 10px 12px 0; text-align: center; color: var(--accent); font-weight: 600; font-size: .9rem; }
-@media (orientation: portrait) and (max-width: 600px) {
-  #video-modal { padding-left: 0; padding-right: 0; }
-  #video-modal .modal-box { border-radius: 0; }
-}
-/* Phone turned sideways: the video takes over the whole screen. */
-@media (orientation: landscape) and (max-height: 520px) {
-  #video-modal { padding: 0; background: #000; }
-  #video-modal .modal-box { max-width: none; width: 100vw; height: 100vh; height: 100dvh; border-radius: 0; display: flex; flex-direction: column; background: #000; }
-  #video-modal .modal-head { padding: 4px 8px; background: #000; }
-  #video-modal .modal-title { font-size: .85rem; }
-  #video-modal .video-frame { flex: 1; aspect-ratio: auto; height: auto; }
-  #video-modal .modal-link, #video-modal .video-hint { display: none; }
-}
-/* Real full screen (Android, computers) */
-#video-frame:fullscreen { width: 100vw; height: 100vh; aspect-ratio: auto; background: #000; }
-#video-frame:-webkit-full-screen { width: 100vw; height: 100vh; background: #000; }
-.fs-close { display: none; position: absolute; top: 12px; right: 12px; z-index: 2; padding: 10px 16px; border-radius: 999px;
-  background: rgba(0,0,0,.7); color: #fff; font-weight: 700; font-size: 1rem; border: 1px solid rgba(255,255,255,.35); }
-#video-frame:fullscreen .fs-close, #video-frame:-webkit-full-screen .fs-close { display: block; }
 
 /* lyrics view: big words above the player bar */
 .lyrics-view { position: fixed; left: 0; right: 0; top: 0; bottom: var(--player-h, 0px); z-index: 9; background: var(--bg);

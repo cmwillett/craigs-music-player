@@ -165,7 +165,7 @@ async function loadStats() {
     if (res.status === 404 || res.status === 405) { say('#stats-note', 'Your Cloudflare helper needs the newer code. Paste the latest worker/playlist-worker.js into it and Deploy.', 'err'); return; }
     if (!res.ok || !body.ok) throw new Error(body.error || `Stats error ${res.status}`);
     await settle();
-    const TILES = ['#st-7', '#st-30', '#st-all', '#st-dev', '#st-v30', '#st-vall'];
+    const TILES = ['#st-7', '#st-30', '#st-all', '#st-dev'];
     const before = statsData ? TILES.map((s) => $(s).textContent) : null;
     statsData = body;
     renderStats();
@@ -198,10 +198,8 @@ function renderStats() {
   $('#st-30').textContent = fmtN(t.plays30);
   $('#st-all').textContent = fmtN(t.plays);
   $('#st-dev').textContent = fmtN(t.devices30);
-  $('#st-v30').textContent = fmtN(t.views30);
-  $('#st-vall').textContent = fmtN(t.views);
   $('#stats-body').hidden = false;
-  if (!t.plays && !t.views) say('#stats-note', 'No plays from other people yet. Counting starts once someone plays a song for 30 seconds.');
+  if (!t.plays) say('#stats-note', 'No plays from other people yet. Counting starts once someone plays a song for 30 seconds.');
   else if (!$('#stats-note').classList.contains('ok')) say('#stats-note', '');
 
   // Plays per day: 30 bars, oldest -> today (local days).
@@ -258,27 +256,19 @@ function renderStats() {
   };
   const tbody = $('#st-songs');
   tbody.replaceChildren();
-  // Merge plays and lyric-video views per song.
-  const bySong = new Map();
-  (s.songs || []).forEach((r) => bySong.set(r.song, { song: r.song, plays: r.plays, plays30: r.plays30, devices: r.devices, last: r.last, views: 0 }));
-  (s.views || []).forEach((v) => {
-    const r = bySong.get(v.song) || { song: v.song, plays: 0, plays30: 0, devices: 0, last: 0, views: 0 };
-    r.views = v.views; r.last = Math.max(r.last || 0, v.last || 0);
-    bySong.set(v.song, r);
-  });
-  const rows = [...bySong.values()].sort((x, y) => (y.plays + y.views) - (x.plays + x.views));
+  const rows = [...(s.songs || [])].sort((x, y) => y.plays - x.plays);
   if (!rows.length) {
     const tr = document.createElement('tr');
-    tr.innerHTML = '<td colspan="6" style="color:var(--muted)">No plays yet.</td>';
+    tr.innerHTML = '<td colspan="5" style="color:var(--muted)">No plays yet.</td>';
     tbody.append(tr);
   }
   rows.forEach((r) => {
     const tr = document.createElement('tr');
-    const cells = [titles[r.song] || r.song, fmtN(r.plays30), fmtN(r.plays), fmtN(r.views), fmtN(r.devices), r.last ? ago(r.last) : ''];
+    const cells = [titles[r.song] || r.song, fmtN(r.plays30), fmtN(r.plays), fmtN(r.devices), r.last ? ago(r.last) : ''];
     cells.forEach((v, i) => {
       const td = document.createElement('td');
       td.textContent = v;
-      if (i >= 1 && i <= 4) td.className = 'num';
+      if (i >= 1 && i <= 3) td.className = 'num';
       tr.append(td);
     });
     tbody.append(tr);
@@ -368,7 +358,6 @@ function render() {
   const data = draft();
   renderEdit(data);
   renderPlaylistEditors(data);
-  $('#yt-lists').value = (data.youtubePlaylists || []).map((p) => `${p.name} | ${p.url}`).join('\n');
   $('#sp-lists').value = (data.spotifyPlaylists || []).map((p) => `${p.name} | ${p.url}`).join('\n');
   $('#sp-client').value = data.spotify?.clientId || '';
   $('#cm-api').value = data.community?.api || '';
@@ -428,7 +417,6 @@ $('#add-save').onclick = async () => {
   if (mp3.size > 50 * 1024 * 1024) return say('#add-msg', 'That MP3 is over 50 MB.', 'err');
   const id = slug(title);
   const fields = {
-    youtube: $('#add-yt').value.trim(),
     description: $('#add-desc').value.trim(),
     tags: tagsFrom($('#add-tags').value),
   };
@@ -439,16 +427,15 @@ $('#add-save').onclick = async () => {
 
   queue(`Add "${title}"`, (data, ctx) => {
     let song = data.songs.find((s) => s.id === id);
-    if (!song) { song = { id, title, file: '', cover: '', youtube: '', tags: [], added: today }; data.songs.push(song); }
+    if (!song) { song = { id, title, file: '', cover: '', tags: [], added: today }; data.songs.push(song); }
     song.title = title;
     song.file = `music/${id}.mp3`;
     ctx.files.set(song.file, mp3B64);
-    if (fields.youtube) song.youtube = fields.youtube;
     if (fields.description) song.description = fields.description;
     if (fields.tags.length) song.tags = fields.tags;
     if (coverB64) { song.cover = `covers/${id}.${coverExt}`; ctx.files.set(song.cover, coverB64); }
   });
-  ['#add-title', '#add-desc', '#add-mp3', '#add-yt', '#add-cover', '#add-tags'].forEach((sel) => { $(sel).value = ''; });
+  ['#add-title', '#add-desc', '#add-mp3', '#add-cover', '#add-tags'].forEach((sel) => { $(sel).value = ''; });
   say('#add-msg', `"${title}" added to your changes. Tap Save all when you're done.`, 'ok');
 };
 
@@ -479,7 +466,6 @@ function renderEdit(data) {
         <summary></summary>
         <label>Title</label><input class="e-title" type="text">
         <label>Short description</label><textarea class="e-desc" rows="2" maxlength="300"></textarea>
-        <label>YouTube lyric video</label><input class="e-yt" type="url" placeholder="https://youtu.be/…">
         <label>Lyrics (optional; leave empty to use the lyrics inside the MP3)</label><textarea class="e-lyrics" rows="4" placeholder="[Verse 1]&#10;…"></textarea>
         <label>Categories (comma separated)</label><input class="e-tags" type="text">
         <div class="tag-picks"></div>
@@ -492,9 +478,8 @@ function renderEdit(data) {
     q('details').dataset.id = song.id;
     if (open.has(song.id)) q('details').open = true;
     const pendingHere = ops.some((o) => o.id === song.id);
-    q('summary').textContent = song.title + (pendingHere ? '  · edited' : '') + (song.youtube ? '' : '  · no video link');
+    q('summary').textContent = song.title + (pendingHere ? '  · edited' : '');
     q('.e-title').value = song.title;
-    q('.e-yt').value = song.youtube || '';
     q('.e-tags').value = (song.tags || []).join(', ');
     q('.e-desc').value = song.description || '';
     q('.e-lyrics').value = song.lyrics || '';
@@ -503,12 +488,11 @@ function renderEdit(data) {
 
     q('.e-save').onclick = async () => {
       const title = q('.e-title').value.trim();
-      const youtube = q('.e-yt').value.trim();
       const tags = tagsFrom(q('.e-tags').value);
       const description = q('.e-desc').value.trim();
       const lyrics = q('.e-lyrics').value.trim();
       const mp3 = q('.e-mp3').files[0], cover = q('.e-cover').files[0];
-      const changed = title !== song.title || youtube !== (song.youtube || '') ||
+      const changed = title !== song.title ||
         description !== (song.description || '') || lyrics !== (song.lyrics || '') || tags.join('|') !== (song.tags || []).join('|') || mp3 || cover;
       if (!changed) { q('details').open = false; return; }
       msg('Adding to your changes…');
@@ -523,7 +507,7 @@ function renderEdit(data) {
           const s = d.songs.find((x) => x.id === id);
           if (!s) return; // removed elsewhere
           if (title) s.title = title;
-          s.youtube = youtube;
+          delete s.youtube; // lyric videos are gone from the app
           s.tags = tags;
           if (description) s.description = description; else delete s.description;
           if (lyrics) s.lyrics = lyrics; else delete s.lyrics;
@@ -723,13 +707,6 @@ $('#sp-save').onclick = () => {
   const lists = lines.map(([name, url]) => ({ name, url }));
   queue('Update Spotify playlists', (d) => { d.spotifyPlaylists = lists; });
   say('#sp-msg', 'Added to your changes.', 'ok');
-};
-
-$('#yt-save').onclick = () => {
-  const lists = $('#yt-lists').value.split('\n').map((l) => l.split('|').map((x) => x.trim()))
-    .filter(([n, u]) => n && u).map(([name, url]) => ({ name, url }));
-  queue('Update YouTube playlists', (d) => { d.youtubePlaylists = lists; });
-  say('#yt-msg', 'Added to your changes.', 'ok');
 };
 
 // ---------- boot ----------
