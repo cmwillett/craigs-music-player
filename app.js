@@ -303,6 +303,14 @@ function openSongSheet(song, list = null, src = null) {
     countPlay(song, 'view'); // lyric video opened (counted right away; the app is awake now)
     if (!openVideo(song.youtube, song.title, { big: true })) window.open(song.youtube, '_blank', 'noopener');
   }, !song.youtube));
+  if (typeof LY !== 'undefined') {
+    const ly = btn('📝&nbsp; Lyrics', 'ly-btn', () => { closeSongSheet(); LY.open(song, list, src); }, !song.lyrics);
+    actions.append(ly);
+    if (!song.lyrics) { // look inside the MP3 for lyrics; hide the button if there are none
+      ly.innerHTML = '📝&nbsp; Lyrics…';
+      LY.getLyrics(song).then((t) => { ly.innerHTML = '📝&nbsp; Lyrics'; if (t) ly.disabled = false; else ly.hidden = true; });
+    }
+  }
   actions.append(btn(SHARE_ICON + '&nbsp; Share', '', () => shareSong(song)));
   if (typeof CM !== 'undefined' && data?.community?.api) {
     actions.append(btn('➕&nbsp; Add to playlist', '', () => { closeSongSheet(); CM.pickPlaylist([song.id]); }));

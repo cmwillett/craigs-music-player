@@ -480,6 +480,7 @@ function renderEdit(data) {
         <label>Title</label><input class="e-title" type="text">
         <label>Short description</label><textarea class="e-desc" rows="2" maxlength="300"></textarea>
         <label>YouTube lyric video</label><input class="e-yt" type="url" placeholder="https://youtu.be/…">
+        <label>Lyrics (optional; leave empty to use the lyrics inside the MP3)</label><textarea class="e-lyrics" rows="4" placeholder="[Verse 1]&#10;…"></textarea>
         <label>Categories (comma separated)</label><input class="e-tags" type="text">
         <div class="tag-picks"></div>
         <label>Replace MP3 (optional)</label><input class="e-mp3" type="file" accept="audio/mpeg,.mp3">
@@ -496,6 +497,7 @@ function renderEdit(data) {
     q('.e-yt').value = song.youtube || '';
     q('.e-tags').value = (song.tags || []).join(', ');
     q('.e-desc').value = song.description || '';
+    q('.e-lyrics').value = song.lyrics || '';
     fillPicks(q('.tag-picks'), q('.e-tags'), data);
     const msg = (t, k = '') => { q('.msg').textContent = t; q('.msg').className = 'msg ' + k; };
 
@@ -504,9 +506,10 @@ function renderEdit(data) {
       const youtube = q('.e-yt').value.trim();
       const tags = tagsFrom(q('.e-tags').value);
       const description = q('.e-desc').value.trim();
+      const lyrics = q('.e-lyrics').value.trim();
       const mp3 = q('.e-mp3').files[0], cover = q('.e-cover').files[0];
       const changed = title !== song.title || youtube !== (song.youtube || '') ||
-        description !== (song.description || '') || tags.join('|') !== (song.tags || []).join('|') || mp3 || cover;
+        description !== (song.description || '') || lyrics !== (song.lyrics || '') || tags.join('|') !== (song.tags || []).join('|') || mp3 || cover;
       if (!changed) { q('details').open = false; return; }
       msg('Adding to your changes…');
       const mp3B64 = mp3 ? await fileB64(mp3) : null;
@@ -523,6 +526,7 @@ function renderEdit(data) {
           s.youtube = youtube;
           s.tags = tags;
           if (description) s.description = description; else delete s.description;
+          if (lyrics) s.lyrics = lyrics; else delete s.lyrics;
           if (mp3B64) { s.file = s.file || `music/${id}.mp3`; ctx.files.set(s.file, mp3B64); }
           if (coverB64) {
             const path = `covers/${id}.${coverExt}`;

@@ -216,6 +216,17 @@
     </div>
   </div>
 
+  <div id="lyrics-view" class="lyrics-view" hidden role="dialog" aria-labelledby="ly-title">
+    <div class="ly-head">
+      <button id="ly-close" class="ly-close" aria-label="Close lyrics">✕</button>
+      <div id="ly-title" class="ly-title"></div>
+      <button id="ly-smaller" class="ly-size" aria-label="Smaller text">A−</button>
+      <button id="ly-bigger" class="ly-size big" aria-label="Bigger text">A+</button>
+    </div>
+    <div id="ly-scroll" class="ly-scroll"><div id="ly-text" class="ly-text"></div></div>
+    <button id="ly-follow" class="ly-follow" aria-pressed="true" title="Scroll along with the song">⇣ Follow along</button>
+  </div>
+
   <div id="toast" class="toast" hidden></div>
 
   <audio id="audio" preload="none"></audio>
@@ -224,5 +235,6 @@
   <script src="spotify.js"></script>
   <script src="community.js"></script>
   <script src="help.js"></script>
+  <script src="lyrics.js"></script>
 </body>
 </html>

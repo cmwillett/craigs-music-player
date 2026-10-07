@@ -62,6 +62,18 @@ const HELP = (() => {
       </ul>`,
     },
     {
+      id: 'words',
+      title: '📝 Read the lyrics',
+      html: `<ul>
+        <li>Tap <b>⋯</b> on a song → <b>Lyrics</b>. The song starts and the words show up big, with the player underneath.</li>
+        <li>Or tap the <b>song name in the player bar</b> → <b>Lyrics</b> for what's playing now.</li>
+        <li><b>A−</b> / <b>A+</b> make the words smaller or bigger (it remembers).</li>
+        <li><b>Follow along</b> scrolls the words as the song plays. Scroll yourself to read ahead; it catches back up after a few seconds. Tap it to turn it off.</li>
+        <li>The screen stays on while the lyrics are open. Close them with <b>✕</b>.</li>
+        <li>No <b>Lyrics</b> button? That song doesn't have lyrics yet.</li>
+      </ul>`,
+    },
+    {
       id: 'lyrics',
       title: '🎬 Watch lyric videos',
       show: has.youtube,
@@ -69,7 +81,7 @@ const HELP = (() => {
         <li>Tap <b>⋯</b> on a song → <b>Watch lyric video</b> to watch it right in the app. If music is playing, it pauses.</li>
         <li>Close it with <b>✕</b> or by tapping outside the video.</li>
         <li>If the button is grayed out, that song doesn't have a video yet.</li>
-        <li><b>Words too small?</b> On Android the video opens full screen and sideways. Tap <b>✕ Close</b> when done. On iPhone, turn your phone sideways and the video fills the screen.</li>
+        <li><b>Words too small?</b> Try <b>⋯ → Lyrics</b> instead for big, easy-to-read words. Or: on Android the video opens full screen and sideways. Tap <b>✕ Close</b> when done. On iPhone, turn your phone sideways and the video fills the screen.</li>
         <li>More lyric-video playlists are under <b>Playlists → YouTube</b>.</li>
       </ul>`,
     },
