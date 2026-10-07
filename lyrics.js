@@ -13,6 +13,9 @@ const LY = (() => {
   let size = (() => { try { return Number(localStorage.getItem(SIZE_KEY)) || 24; } catch { return 24; } })();
   let follow = (() => { try { return localStorage.getItem(FOLLOW_KEY) !== '0'; } catch { return true; } })();
   let userScrollUntil = 0;
+  let userScrolling = false; // finger/mouse is moving the lyrics
+  let shift = 0;             // px the listener moved us from our guess (kept for the rest of the song)
+  let marks = [];            // [{el, at}] lyric lines with the fraction of the sung part where each starts
   let wakeLock = null;
 
   // ---------- read lyrics from the MP3's ID3 tag ----------
@@ -114,6 +117,16 @@ const LY = (() => {
       }
       box.append(el('div', { className: 'ly-line', textContent: line }));
     });
+    // Guess when each line is sung. Only real lyric lines take time (longer lines a bit more);
+    // a section label adds a short pause for the music between sections.
+    marks = [];
+    let t = 0;
+    [...box.children].forEach((n) => {
+      if (n.classList.contains('ly-section')) t += 1.5;
+      else if (n.classList.contains('ly-line')) { marks.push({ el: n, at: t }); t += 0.6 + n.textContent.length / 35; }
+    });
+    marks.forEach((m) => { m.at /= t || 1; });
+    shift = 0;
   }
   function applySize() {
     $('#ly-text').style.fontSize = size + 'px';
@@ -167,17 +180,32 @@ const LY = (() => {
     keepAwake(false);
   }
 
-  // Follow along: scroll in step with the song (roughly; Suno doesn't give per-line timing).
+  // Follow along: keep the line being sung about a third of the way down the screen.
+  // Suno doesn't give per-line timing, so this is a guess: singing starts after a short intro,
+  // ends a little before the song does, and lines are spread by length.
+  function target() {
+    const sc = $('#ly-scroll');
+    const d = audio.duration;
+    if (!marks.length || !d) return null;
+    const start = Math.min(18, Math.max(6, d * 0.07));
+    const end = d - Math.min(25, Math.max(10, d * 0.1));
+    const p = Math.min(1, Math.max(0, (audio.currentTime - start) / Math.max(1, end - start)));
+    let i = 0;
+    while (i + 1 < marks.length && marks[i + 1].at <= p) i++;
+    const a = marks[i], b = marks[i + 1];
+    const k = b ? Math.min(1, (p - a.at) / Math.max(1e-6, b.at - a.at)) : 0;
+    const y = a.el.offsetTop + (b ? (b.el.offsetTop - a.el.offsetTop) * k : 0);
+    return y - sc.clientHeight * 0.35;
+  }
   function tick() {
-    if (!current || $('#lyrics-view').hidden || !follow) return;
+    if (!current || $('#lyrics-view').hidden || !follow || userScrolling) return;
     if (queue[index]?.id !== current.id || !audio.duration) return;
     if (Date.now() < userScrollUntil) return;
     const sc = $('#ly-scroll');
-    const max = sc.scrollHeight - sc.clientHeight;
-    if (max <= 0) return;
-    // Start moving after the first few seconds and finish a little before the end.
-    const p = Math.min(1, Math.max(0, (audio.currentTime - 8) / Math.max(1, audio.duration - 20)));
-    sc.scrollTo({ top: p * max, behavior: 'smooth' });
+    const t = target();
+    if (t == null) return;
+    const top = Math.max(0, Math.min(sc.scrollHeight - sc.clientHeight, t + shift));
+    if (Math.abs(top - sc.scrollTop) > 2) sc.scrollTo({ top, behavior: 'smooth' });
   }
   audio.addEventListener('timeupdate', tick);
   // If the next song in the list starts while lyrics are open, switch to its lyrics.
@@ -190,8 +218,20 @@ const LY = (() => {
   $('#ly-smaller').onclick = () => { size = Math.max(16, size - 3); applySize(); };
   $('#ly-bigger').onclick = () => { size = Math.min(44, size + 3); applySize(); };
   $('#ly-follow').onclick = () => { follow = !follow; applyFollow(); if (follow) { userScrollUntil = 0; tick(); } };
-  const pauseFollow = () => { userScrollUntil = Date.now() + 8000; }; // reading ahead? give them 8 seconds
-  ['touchstart', 'wheel', 'mousedown'].forEach((ev) => $('#ly-scroll').addEventListener(ev, pauseFollow, { passive: true }));
+  // When the listener scrolls, follow along from wherever they leave it (we were ahead or behind).
+  let settleTimer = null;
+  const settle = () => {
+    clearTimeout(settleTimer);
+    settleTimer = setTimeout(() => {
+      userScrolling = false;
+      const t = target();
+      if (t != null) shift = $('#ly-scroll').scrollTop - t;
+      userScrollUntil = Date.now() + 1500;
+    }, 1200);
+  };
+  const grab = () => { userScrolling = true; settle(); };
+  ['touchstart', 'wheel', 'mousedown'].forEach((ev) => $('#ly-scroll').addEventListener(ev, grab, { passive: true }));
+  $('#ly-scroll').addEventListener('scroll', () => { if (userScrolling) settle(); }, { passive: true });
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !$('#lyrics-view').hidden) close(); });
 
   return { open, close, getLyrics, isOpen: () => !$('#lyrics-view').hidden };

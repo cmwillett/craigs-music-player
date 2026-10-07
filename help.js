@@ -67,7 +67,7 @@ const HELP = (() => {
         <li>Tap <b>⋯</b> on a song → <b>Lyrics</b>. The song starts and the words show up big, with the player underneath.</li>
         <li>Or tap the <b>song name in the player bar</b> → <b>Lyrics</b> for what's playing now.</li>
         <li><b>A−</b> / <b>A+</b> make the words smaller or bigger (it remembers).</li>
-        <li><b>Follow along</b> scrolls the words as the song plays. Scroll yourself to read ahead; it catches back up after a few seconds. Tap it to turn it off.</li>
+        <li><b>Follow along</b> scrolls the words as the song plays. It's a best guess, so if it's ahead or behind, just scroll to the right spot and it keeps going from there. Tap it to turn it off.</li>
         <li>The screen stays on while the lyrics are open. Close them with <b>✕</b>.</li>
         <li>No <b>Lyrics</b> button? That song doesn't have lyrics yet.</li>
       </ul>`,
