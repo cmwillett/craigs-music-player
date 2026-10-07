@@ -60,7 +60,7 @@
     @keyframes tile-flash { 0% { box-shadow: 0 0 0 2px var(--accent); } 100% { box-shadow: 0 0 0 2px transparent; } }
     @media (prefers-reduced-motion: reduce) { .stats-refresh.loading .spin-icon, .tile.changed { animation: none; } }
     .tiles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-top: 10px; }
-    @media (min-width: 560px) { .tiles { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+    @media (min-width: 560px) { .tiles { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
     .tile { background: var(--bg); border-radius: 12px; padding: 12px; }
     .tile-num { font-size: 1.7rem; font-weight: 800; line-height: 1.1; font-variant-numeric: tabular-nums; }
     .tile-label { color: var(--muted); font-size: .8rem; margin-top: 2px; }
@@ -81,6 +81,7 @@
     .stats-table td:first-child { min-width: 130px; font-weight: 600; }
     .stats-table th:not(:first-child), .stats-table td:not(:first-child) { white-space: nowrap; }
     @media (max-width: 480px) { .stats-table th:nth-child(3), .stats-table td:nth-child(3) { display: none; } }
+    @media (max-width: 380px) { .stats-table th:nth-child(5), .stats-table td:nth-child(5) { display: none; } }
     .stats-table td:last-child { color: var(--muted); white-space: nowrap; }
     .atabs { position: sticky; top: 0; z-index: 6; display: flex; gap: 4px; background: var(--card); border-radius: 12px; padding: 4px; margin: 4px 0 12px; box-shadow: 0 6px 14px rgba(0,0,0,.35); }
     .atab { flex: 1; padding: 9px 4px; border-radius: 9px; color: var(--muted); font-weight: 600; font-size: .92rem; position: relative; }
@@ -146,6 +147,8 @@
             <div class="tile"><div class="tile-num" id="st-30">0</div><div class="tile-label">plays, last 30 days</div></div>
             <div class="tile"><div class="tile-num" id="st-all">0</div><div class="tile-label">plays, all time</div></div>
             <div class="tile"><div class="tile-num" id="st-dev">0</div><div class="tile-label">listeners, last 30 days</div></div>
+            <div class="tile"><div class="tile-num" id="st-v30">0</div><div class="tile-label">lyric videos, last 30 days</div></div>
+            <div class="tile"><div class="tile-num" id="st-vall">0</div><div class="tile-label">lyric videos, all time</div></div>
           </div>
           <h3 class="stats-sub">Plays per day, last 30 days</h3>
           <div class="chart" id="st-chart" role="img"></div>
@@ -153,7 +156,7 @@
           <div id="st-tip" class="chart-tip" hidden></div>
           <h3 class="stats-sub">By song</h3>
           <div class="table-wrap"><table class="stats-table">
-            <thead><tr><th>Song</th><th class="num">30 days</th><th class="num">All time</th><th class="num">Listeners</th><th>Last</th></tr></thead>
+            <thead><tr><th>Song</th><th class="num">Plays 30d</th><th class="num">All time</th><th class="num">Videos</th><th class="num">Listeners</th><th>Last</th></tr></thead>
             <tbody id="st-songs"></tbody>
           </table></div>
         </div>

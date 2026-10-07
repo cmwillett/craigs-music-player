@@ -165,10 +165,11 @@ async function loadStats() {
     if (res.status === 404 || res.status === 405) { say('#stats-note', 'Your Cloudflare helper needs the newer code. Paste the latest worker/playlist-worker.js into it and Deploy.', 'err'); return; }
     if (!res.ok || !body.ok) throw new Error(body.error || `Stats error ${res.status}`);
     await settle();
-    const before = statsData ? ['#st-7', '#st-30', '#st-all', '#st-dev'].map((s) => $(s).textContent) : null;
+    const TILES = ['#st-7', '#st-30', '#st-all', '#st-dev', '#st-v30', '#st-vall'];
+    const before = statsData ? TILES.map((s) => $(s).textContent) : null;
     statsData = body;
     renderStats();
-    if (before) ['#st-7', '#st-30', '#st-all', '#st-dev'].forEach((s, i) => {
+    if (before) TILES.forEach((s, i) => {
       const tile = $(s).parentElement;
       if ($(s).textContent !== before[i]) { tile.classList.remove('changed'); void tile.offsetWidth; tile.classList.add('changed'); }
     });
@@ -197,8 +198,10 @@ function renderStats() {
   $('#st-30').textContent = fmtN(t.plays30);
   $('#st-all').textContent = fmtN(t.plays);
   $('#st-dev').textContent = fmtN(t.devices30);
+  $('#st-v30').textContent = fmtN(t.views30);
+  $('#st-vall').textContent = fmtN(t.views);
   $('#stats-body').hidden = false;
-  if (!t.plays) say('#stats-note', 'No plays from other people yet. Counting starts once someone plays a song for 30 seconds.');
+  if (!t.plays && !t.views) say('#stats-note', 'No plays from other people yet. Counting starts once someone plays a song for 30 seconds.');
   else if (!$('#stats-note').classList.contains('ok')) say('#stats-note', '');
 
   // Plays per day: 30 bars, oldest -> today (local days).
@@ -255,19 +258,27 @@ function renderStats() {
   };
   const tbody = $('#st-songs');
   tbody.replaceChildren();
-  const rows = s.songs || [];
+  // Merge plays and lyric-video views per song.
+  const bySong = new Map();
+  (s.songs || []).forEach((r) => bySong.set(r.song, { song: r.song, plays: r.plays, plays30: r.plays30, devices: r.devices, last: r.last, views: 0 }));
+  (s.views || []).forEach((v) => {
+    const r = bySong.get(v.song) || { song: v.song, plays: 0, plays30: 0, devices: 0, last: 0, views: 0 };
+    r.views = v.views; r.last = Math.max(r.last || 0, v.last || 0);
+    bySong.set(v.song, r);
+  });
+  const rows = [...bySong.values()].sort((x, y) => (y.plays + y.views) - (x.plays + x.views));
   if (!rows.length) {
     const tr = document.createElement('tr');
-    tr.innerHTML = '<td colspan="5" style="color:var(--muted)">No plays yet.</td>';
+    tr.innerHTML = '<td colspan="6" style="color:var(--muted)">No plays yet.</td>';
     tbody.append(tr);
   }
   rows.forEach((r) => {
     const tr = document.createElement('tr');
-    const cells = [titles[r.song] || r.song, fmtN(r.plays30), fmtN(r.plays), fmtN(r.devices), r.last ? ago(r.last) : ''];
+    const cells = [titles[r.song] || r.song, fmtN(r.plays30), fmtN(r.plays), fmtN(r.views), fmtN(r.devices), r.last ? ago(r.last) : ''];
     cells.forEach((v, i) => {
       const td = document.createElement('td');
       td.textContent = v;
-      if (i >= 1 && i <= 3) td.className = 'num';
+      if (i >= 1 && i <= 4) td.className = 'num';
       tr.append(td);
     });
     tbody.append(tr);

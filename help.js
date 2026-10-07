@@ -69,6 +69,7 @@ const HELP = (() => {
         <li>Tap <b>⋯</b> on a song → <b>Watch lyric video</b> to watch it right in the app. If music is playing, it pauses.</li>
         <li>Close it with <b>✕</b> or by tapping outside the video.</li>
         <li>If the button is grayed out, that song doesn't have a video yet.</li>
+        <li><b>Words too small?</b> On Android the video opens full screen and sideways. Tap <b>✕ Close</b> when done. On iPhone, turn your phone sideways and the video fills the screen.</li>
         <li>More lyric-video playlists are under <b>Playlists → YouTube</b>.</li>
       </ul>`,
     },

@@ -32,7 +32,8 @@ export default {
 
     if (req.method === 'OPTIONS') return new Response(null, { status: 204, headers: cors });
     const path = new URL(req.url).pathname.replace(/\/+$/, '') || '/';
-    if (path === '/play') return recordPlay(req, env, originOk, reply);
+    if (path === '/play') return recordPlay(req, env, originOk, reply, 'plays');
+    if (path === '/view') return recordPlay(req, env, originOk, reply, 'views'); // lyric video opened
     if (path === '/stats') return readStats(req, env, originOk, reply);
     if (req.method === 'GET') return reply({ ok: true, service: "Craig's Songs playlists", stats: !!env.DB });
     if (req.method !== 'POST') return reply({ error: 'Use POST' }, 405);
@@ -156,12 +157,15 @@ async function ensureTable(env) {
     env.DB.prepare('CREATE TABLE IF NOT EXISTS plays (id INTEGER PRIMARY KEY, song TEXT NOT NULL, device TEXT NOT NULL, ts INTEGER NOT NULL)'),
     env.DB.prepare('CREATE INDEX IF NOT EXISTS plays_ts ON plays (ts)'),
     env.DB.prepare('CREATE INDEX IF NOT EXISTS plays_song ON plays (song)'),
+    env.DB.prepare('CREATE TABLE IF NOT EXISTS views (id INTEGER PRIMARY KEY, song TEXT NOT NULL, device TEXT NOT NULL, ts INTEGER NOT NULL)'),
+    env.DB.prepare('CREATE INDEX IF NOT EXISTS views_ts ON views (ts)'),
   ]);
   tableReady = true;
 }
 
-// The app calls this once a song has played for 30 seconds (or half of it).
-async function recordPlay(req, env, originOk, reply) {
+// /play: the app calls this once a song has played for 30 seconds (or half of it).
+// /view: the app calls this when someone opens a song's lyric video.
+async function recordPlay(req, env, originOk, reply, table) {
   if (req.method !== 'POST') return reply({ error: 'Use POST' }, 405);
   if (!originOk) return reply({ error: 'Not allowed' }, 403);
   if (!env.DB) return reply({ ok: false, error: 'Play counts are not set up.' }, 501);
@@ -174,8 +178,8 @@ async function recordPlay(req, env, originOk, reply) {
     await ensureTable(env);
     // Ignore the same song from the same device within 60 seconds (double taps, retries).
     const now = Date.now();
-    const dup = await env.DB.prepare('SELECT 1 FROM plays WHERE song = ? AND device = ? AND ts > ? LIMIT 1').bind(song, device, now - 60000).first();
-    if (!dup) await env.DB.prepare('INSERT INTO plays (song, device, ts) VALUES (?, ?, ?)').bind(song, device, now).run();
+    const dup = await env.DB.prepare(`SELECT 1 FROM ${table} WHERE song = ? AND device = ? AND ts > ? LIMIT 1`).bind(song, device, now - 60000).first();
+    if (!dup) await env.DB.prepare(`INSERT INTO ${table} (song, device, ts) VALUES (?, ?, ?)`).bind(song, device, now).run();
     return reply({ ok: true });
   } catch {
     return reply({ ok: false }, 503); // over a free limit or a D1 hiccup: the app ignores this
@@ -210,7 +214,7 @@ async function readStats(req, env, originOk, reply) {
   const day = 864e5;
   const d7 = now - 7 * day, d30 = now - 30 * day;
   const tz = Number(new URL(req.url).searchParams.get('tz') || 0); // browser's UTC offset in minutes
-  const [totals, songs, daily] = await env.DB.batch([
+  const [totals, songs, daily, vtotals, vsongs] = await env.DB.batch([
     env.DB.prepare(`SELECT COUNT(*) AS plays,
         COALESCE(SUM(ts > ?1), 0) AS plays7, COALESCE(SUM(ts > ?2), 0) AS plays30,
         COUNT(DISTINCT device) AS devices,
@@ -221,6 +225,9 @@ async function readStats(req, env, originOk, reply) {
       FROM plays GROUP BY song ORDER BY plays DESC`).bind(d30),
     env.DB.prepare(`SELECT CAST((ts - ?2 * 60000) / 86400000 AS INTEGER) AS d, COUNT(*) AS plays
       FROM plays WHERE ts > ?1 GROUP BY d ORDER BY d`).bind(d30, tz),
+    env.DB.prepare(`SELECT COUNT(*) AS views, COALESCE(SUM(ts > ?1), 0) AS views7, COALESCE(SUM(ts > ?2), 0) AS views30,
+        COUNT(DISTINCT CASE WHEN ts > ?2 THEN device END) AS viewers30 FROM views`).bind(d7, d30),
+    env.DB.prepare(`SELECT song, COUNT(*) AS views, SUM(ts > ?1) AS views30, MAX(ts) AS last FROM views GROUP BY song`).bind(d30),
   ]);
-  return reply({ ok: true, now, totals: totals.results[0], songs: songs.results, daily: daily.results });
+  return reply({ ok: true, now, totals: { ...totals.results[0], ...vtotals.results[0] }, songs: songs.results, views: vsongs.results, daily: daily.results });
 }

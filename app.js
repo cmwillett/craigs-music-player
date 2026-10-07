@@ -129,14 +129,14 @@ function statsDevice() {
     return id;
   } catch { return null; }
 }
-function countPlay(song) {
+function countPlay(song, kind = 'play') {
   const api = data?.community?.api;
   if (!api || !song) return;
   try { if (localStorage.getItem(STATS_ME) === '1') return; } catch {}
   const device = statsDevice();
   if (!device) return;
   // text/plain body = no CORS preflight; keepalive lets it finish even if the app is closed.
-  fetch(api.replace(/\/+$/, '') + '/play', { method: 'POST', body: JSON.stringify({ song: song.id, device }), keepalive: true }).catch(() => {});
+  fetch(api.replace(/\/+$/, '') + (kind === 'view' ? '/view' : '/play'), { method: 'POST', body: JSON.stringify({ song: song.id, device }), keepalive: true }).catch(() => {});
 }
 
 // ---------- shuffle / repeat ----------
@@ -300,7 +300,8 @@ function openSongSheet(song, list = null, src = null) {
   }));
   actions.append(btn('🎬&nbsp; Watch lyric video', 'yt-btn', () => {
     closeSongSheet();
-    if (!openVideo(song.youtube, song.title)) window.open(song.youtube, '_blank', 'noopener');
+    countPlay(song, 'view'); // lyric video opened (counted right away; the app is awake now)
+    if (!openVideo(song.youtube, song.title, { big: true })) window.open(song.youtube, '_blank', 'noopener');
   }, !song.youtube));
   actions.append(btn(SHARE_ICON + '&nbsp; Share', '', () => shareSong(song)));
   if (typeof CM !== 'undefined' && data?.community?.api) {
@@ -569,13 +570,35 @@ function openSpotify(url, title) {
     allow: 'autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture',
   });
   $('#video-frame').classList.add('spotify');
-  $('#video-frame').replaceChildren(frame);
+  // A big close button that floats over the video while it's full screen.
+  const fsClose = el('button', { className: 'fs-close', textContent: '✕ Close', type: 'button' });
+  fsClose.onclick = () => closeVideo();
+  $('#video-frame').replaceChildren(frame, fsClose);
   $('#video-modal').hidden = false;
   document.body.classList.add('modal-open');
   return true;
 }
 
-function openVideo(url, title) {
+// Phones: make lyric videos big enough to read. Android -> real full screen, turned sideways.
+// iPhone can't do that for web pages, so we show a "turn your phone sideways" hint and the
+// video fills the screen in landscape (CSS below).
+const isPhoneLike = () => matchMedia('(pointer: coarse)').matches && Math.min(screen.width, screen.height) < 700;
+const isIOS_ = /iphone|ipod/i.test(navigator.userAgent);
+async function goFullscreen() {
+  const box = $('#video-frame');
+  try {
+    if (box.requestFullscreen) await box.requestFullscreen({ navigationUI: 'hide' });
+    else if (box.webkitRequestFullscreen) box.webkitRequestFullscreen();
+    else return false;
+    try { await screen.orientation.lock('landscape'); } catch (_) { /* not allowed on this device */ }
+    return true;
+  } catch (_) { return false; }
+}
+document.addEventListener('fullscreenchange', () => {
+  if (!document.fullscreenElement) { try { screen.orientation.unlock(); } catch (_) {} }
+});
+
+function openVideo(url, title, opts = {}) {
   const src = youtubeEmbed(url);
   if (!src) return false; // not a YouTube link we understand -> let the link open normally
   if (!audio.paused) audio.pause();
@@ -590,17 +613,26 @@ function openVideo(url, title) {
     allowFullscreen: true,
     referrerPolicy: 'strict-origin-when-cross-origin',
   });
-  $('#video-frame').replaceChildren(frame);
+  const fsClose = el('button', { className: 'fs-close', textContent: '✕ Close', type: 'button' });
+  fsClose.onclick = () => closeVideo();
+  $('#video-frame').replaceChildren(frame, fsClose); // big close button shown over the video in full screen
   $('#video-modal').hidden = false;
   document.body.classList.add('modal-open');
+  const canFull = !!($('#video-frame').requestFullscreen || $('#video-frame').webkitRequestFullscreen);
+  $('#video-full').hidden = !canFull;
+  $('#video-hint').hidden = !(isPhoneLike() && (isIOS_ || !canFull));
+  // Lyric videos on a phone: go straight to full screen (must happen right inside the tap).
+  if (opts.big && isPhoneLike() && canFull && !isIOS_) goFullscreen();
   return true;
 }
 function closeVideo() {
+  if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
   $('#video-frame').replaceChildren(); // removing the iframe stops the video
   $('#video-modal').hidden = true;
   document.body.classList.remove('modal-open');
 }
 $('#video-close').onclick = closeVideo;
+$('#video-full').onclick = () => { goFullscreen(); };
 $('#video-modal').addEventListener('click', (e) => { if (e.target.id === 'video-modal') closeVideo(); });
 document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !$('#video-modal').hidden) closeVideo(); });
 
