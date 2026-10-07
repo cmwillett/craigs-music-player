@@ -14,7 +14,9 @@ const LY = (() => {
   let follow = (() => { try { return localStorage.getItem(FOLLOW_KEY) !== '0'; } catch { return true; } })();
   let userScrollUntil = 0;
   let userScrolling = false; // finger/mouse is moving the lyrics
-  let shift = 0;             // px the listener moved us from our guess (kept for the rest of the song)
+  let anchors = [];          // listener corrections for this song: [[seconds, place in lyrics 0..1], ...]
+  let anchorKey = '';
+  const ANCHORS = 'lyrics-anchors-v1'; // remembered per song on this device
   let marks = [];            // [{el, at}] lyric lines with the fraction of the sung part where each starts
   let wakeLock = null;
 
@@ -126,7 +128,8 @@ const LY = (() => {
       else if (n.classList.contains('ly-line')) { marks.push({ el: n, at: t }); t += 0.6 + n.textContent.length / 35; }
     });
     marks.forEach((m) => { m.at /= t || 1; });
-    shift = 0;
+    anchorKey = current ? `${current.id}:${text.length}` : '';
+    try { anchors = (JSON.parse(localStorage.getItem(ANCHORS) || '{}')[anchorKey]) || []; } catch { anchors = []; }
   }
   function applySize() {
     $('#ly-text').style.fontSize = size + 'px';
@@ -170,7 +173,12 @@ const LY = (() => {
     } else if (audio.paused) audio.play().catch(() => {});
     const text = await getLyrics(song);
     if (current !== song) return;
-    if (text) render(text);
+    if (text) {
+      render(text);
+      let tipped = false;
+      try { tipped = !!localStorage.getItem('lyrics-tip-v1'); localStorage.setItem('lyrics-tip-v1', '1'); } catch {}
+      if (!tipped && follow) setTimeout(() => toast("The words scroll on their own, but it's a guess. If they get ahead or behind, scroll to where the song is and they'll follow from there.", 'Got it', () => {}, 12000), 1500);
+    }
     else $('#ly-text').replaceChildren(el('div', { className: 'ly-loading', textContent: "This song doesn't have lyrics yet." }));
   }
   function close() {
@@ -182,20 +190,58 @@ const LY = (() => {
 
   // Follow along: keep the line being sung about a third of the way down the screen.
   // Suno doesn't give per-line timing, so this is a guess: singing starts after a short intro,
-  // ends a little before the song does, and lines are spread by length.
+  // ends a little before the song does, and lines are spread by length. When the listener
+  // scrolls to the right spot, that becomes a fixed point the rest of the song is timed from
+  // (and it's remembered for next time).
+  function placeAt(time) {
+    const d = audio.duration;
+    const start = Math.min(18, Math.max(6, d * 0.07));
+    let end = d - Math.min(25, Math.max(10, d * 0.1));
+    const pts = anchors.filter((x) => x[0] > start && x[1] > 0 && x[1] < 1);
+    if (pts.length) end = Math.max(end, pts[pts.length - 1][0] + 5);
+    const all = [[start, 0], ...pts, [end, 1]];
+    if (time <= start) return 0;
+    for (let i = 0; i + 1 < all.length; i++) {
+      const [t0, p0] = all[i], [t1, p1] = all[i + 1];
+      if (time <= t1) return p0 + (p1 - p0) * ((time - t0) / Math.max(0.1, t1 - t0));
+    }
+    return 1;
+  }
   function target() {
     const sc = $('#ly-scroll');
-    const d = audio.duration;
-    if (!marks.length || !d) return null;
-    const start = Math.min(18, Math.max(6, d * 0.07));
-    const end = d - Math.min(25, Math.max(10, d * 0.1));
-    const p = Math.min(1, Math.max(0, (audio.currentTime - start) / Math.max(1, end - start)));
+    if (!marks.length || !audio.duration) return null;
+    const p = Math.min(1, Math.max(0, placeAt(audio.currentTime)));
     let i = 0;
     while (i + 1 < marks.length && marks[i + 1].at <= p) i++;
     const a = marks[i], b = marks[i + 1];
     const k = b ? Math.min(1, (p - a.at) / Math.max(1e-6, b.at - a.at)) : 0;
     const y = a.el.offsetTop + (b ? (b.el.offsetTop - a.el.offsetTop) * k : 0);
     return y - sc.clientHeight * 0.35;
+  }
+  // Where in the lyrics (0..1) the listener has scrolled to: the line a third of the way down.
+  function placeOnScreen() {
+    const sc = $('#ly-scroll');
+    const y = sc.scrollTop + sc.clientHeight * 0.35;
+    if (!marks.length) return null;
+    if (y <= marks[0].el.offsetTop) return 0;
+    let i = 0;
+    while (i + 1 < marks.length && marks[i + 1].el.offsetTop <= y) i++;
+    const a = marks[i], b = marks[i + 1];
+    if (!b) return 1;
+    return a.at + (b.at - a.at) * Math.min(1, (y - a.el.offsetTop) / Math.max(1, b.el.offsetTop - a.el.offsetTop));
+  }
+  function correct() {
+    if (!current || !audio.duration || queue[index]?.id !== current.id) return;
+    const now = audio.currentTime, p = placeOnScreen();
+    if (p == null || p <= 0 || p >= 1) return;
+    // Keep earlier corrections that still agree; drop anything later (this one replaces them).
+    anchors = anchors.filter((x) => x[0] < now - 4 && x[1] < p);
+    anchors.push([Math.round(now * 10) / 10, Math.round(p * 1000) / 1000]);
+    try {
+      const all = JSON.parse(localStorage.getItem(ANCHORS) || '{}');
+      all[anchorKey] = anchors;
+      localStorage.setItem(ANCHORS, JSON.stringify(all));
+    } catch {}
   }
   function tick() {
     if (!current || $('#lyrics-view').hidden || !follow || userScrolling) return;
@@ -204,7 +250,7 @@ const LY = (() => {
     const sc = $('#ly-scroll');
     const t = target();
     if (t == null) return;
-    const top = Math.max(0, Math.min(sc.scrollHeight - sc.clientHeight, t + shift));
+    const top = Math.max(0, Math.min(sc.scrollHeight - sc.clientHeight, t));
     if (Math.abs(top - sc.scrollTop) > 2) sc.scrollTo({ top, behavior: 'smooth' });
   }
   audio.addEventListener('timeupdate', tick);
@@ -224,8 +270,7 @@ const LY = (() => {
     clearTimeout(settleTimer);
     settleTimer = setTimeout(() => {
       userScrolling = false;
-      const t = target();
-      if (t != null) shift = $('#ly-scroll').scrollTop - t;
+      if (follow) correct();
       userScrollUntil = Date.now() + 1500;
     }, 1200);
   };
