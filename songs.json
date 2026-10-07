@@ -146,6 +146,18 @@
       ],
       "added": "2026-10-04",
       "description": "This song represents my daughter and her two friends!"
+    },
+    {
+      "id": "nightmare-on-simca-lane",
+      "title": "Nightmare on Simca Lane",
+      "file": "music/nightmare-on-simca-lane.mp3",
+      "cover": "",
+      "youtube": "",
+      "tags": [
+        "halloween"
+      ],
+      "added": "2026-10-07",
+      "description": "Halloween song personalized for our home"
     }
   ],
   "playlists": [
