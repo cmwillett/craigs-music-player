@@ -157,7 +157,7 @@ async function loadStats() {
   const settle = () => new Promise((r) => setTimeout(r, Math.max(0, 600 - (Date.now() - started)))); // long enough to see
   let ok = false;
   try {
-    const res = await fetch(`${api.replace(/\/+$/, '')}/stats?tz=${new Date().getTimezoneOffset()}`, {
+    const res = await fetch(`${api.replace(/\/+$/, '')}/stats?tz=${new Date().getTimezoneOffset()}&today=${new Date().setHours(0, 0, 0, 0)}`, {
       headers: { Authorization: `Bearer ${token}` }, cache: 'no-store',
     });
     const body = await res.json().catch(() => ({}));
@@ -256,19 +256,20 @@ function renderStats() {
   };
   const tbody = $('#st-songs');
   tbody.replaceChildren();
-  const rows = [...(s.songs || [])].sort((x, y) => y.plays - x.plays);
+  const rows = [...(s.songs || [])].sort((x, y) => (y.playsToday || 0) - (x.playsToday || 0) || y.plays - x.plays);
+  const hasToday = rows.some((r) => 'playsToday' in r); // older helper code doesn't send it
   if (!rows.length) {
     const tr = document.createElement('tr');
-    tr.innerHTML = '<td colspan="5" style="color:var(--muted)">No plays yet.</td>';
+    tr.innerHTML = '<td colspan="6" style="color:var(--muted)">No plays yet.</td>';
     tbody.append(tr);
   }
   rows.forEach((r) => {
     const tr = document.createElement('tr');
-    const cells = [titles[r.song] || r.song, fmtN(r.plays30), fmtN(r.plays), fmtN(r.devices), r.last ? ago(r.last) : ''];
+    const cells = [titles[r.song] || r.song, hasToday ? fmtN(r.playsToday) : '–', fmtN(r.plays30), fmtN(r.plays), fmtN(r.devices), r.last ? ago(r.last) : ''];
     cells.forEach((v, i) => {
       const td = document.createElement('td');
       td.textContent = v;
-      if (i >= 1 && i <= 3) td.className = 'num';
+      if (i >= 1 && i <= 4) td.className = 'num' + (i === 1 && r.playsToday ? ' hot' : '');
       tr.append(td);
     });
     tbody.append(tr);

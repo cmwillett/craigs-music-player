@@ -213,21 +213,20 @@ async function readStats(req, env, originOk, reply) {
   const now = Date.now();
   const day = 864e5;
   const d7 = now - 7 * day, d30 = now - 30 * day;
-  const tz = Number(new URL(req.url).searchParams.get('tz') || 0); // browser's UTC offset in minutes
-  const [totals, songs, daily, vtotals, vsongs] = await env.DB.batch([
+  const q = new URL(req.url).searchParams;
+  const tz = Number(q.get('tz') || 0); // browser's UTC offset in minutes
+  const today = Number(q.get('today') || 0) || now - day; // start of the admin's day (their time zone)
+  const [totals, songs, daily] = await env.DB.batch([
     env.DB.prepare(`SELECT COUNT(*) AS plays,
         COALESCE(SUM(ts > ?1), 0) AS plays7, COALESCE(SUM(ts > ?2), 0) AS plays30,
         COUNT(DISTINCT device) AS devices,
         COUNT(DISTINCT CASE WHEN ts > ?2 THEN device END) AS devices30
       FROM plays`).bind(d7, d30),
-    env.DB.prepare(`SELECT song, COUNT(*) AS plays, SUM(ts > ?1) AS plays30,
+    env.DB.prepare(`SELECT song, COUNT(*) AS plays, SUM(ts > ?1) AS plays30, SUM(ts >= ?2) AS playsToday,
         COUNT(DISTINCT device) AS devices, MAX(ts) AS last
-      FROM plays GROUP BY song ORDER BY plays DESC`).bind(d30),
+      FROM plays GROUP BY song ORDER BY plays DESC`).bind(d30, today),
     env.DB.prepare(`SELECT CAST((ts - ?2 * 60000) / 86400000 AS INTEGER) AS d, COUNT(*) AS plays
       FROM plays WHERE ts > ?1 GROUP BY d ORDER BY d`).bind(d30, tz),
-    env.DB.prepare(`SELECT COUNT(*) AS views, COALESCE(SUM(ts > ?1), 0) AS views7, COALESCE(SUM(ts > ?2), 0) AS views30,
-        COUNT(DISTINCT CASE WHEN ts > ?2 THEN device END) AS viewers30 FROM views`).bind(d7, d30),
-    env.DB.prepare(`SELECT song, COUNT(*) AS views, SUM(ts > ?1) AS views30, MAX(ts) AS last FROM views GROUP BY song`).bind(d30),
   ]);
-  return reply({ ok: true, now, totals: { ...totals.results[0], ...vtotals.results[0] }, songs: songs.results, views: vsongs.results, daily: daily.results });
+  return reply({ ok: true, now, totals: totals.results[0], songs: songs.results, daily: daily.results });
 }
