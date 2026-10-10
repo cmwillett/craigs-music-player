@@ -692,6 +692,7 @@ async function boot() {
   if (typeof CM !== 'undefined') CM.refreshButtons();
   openSharedSong();
   if (typeof HELP !== 'undefined') HELP.nudge();
+  if (typeof SUB !== 'undefined') SUB.init();
   if (typeof SP !== 'undefined') SP.init(data);
 }
 boot();

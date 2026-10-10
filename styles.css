@@ -300,7 +300,13 @@ body.selecting .row .now { display: none; }
 .corner .corner-link { position: static; }
 .help-btn { width: 36px; justify-content: center; padding: 7px 0; font-size: 1rem; font-weight: 800; color: var(--text); }
 .top h1 { padding-right: 150px; }
+.top.has-sub h1 { padding-right: 194px; }
+.sub-btn[hidden] { display: none; }
+.sub-btn { font-size: .95rem; }
+.sub-btn.on { box-shadow: inset 0 0 0 2px var(--accent); }
+.sub-text { margin: 4px 0 6px; line-height: 1.5; }
 @media (max-width: 420px) {
+  .top.has-sub h1 { padding-right: 134px; }
   .corner .corner-link span { display: none; }   /* Admin shows as just the gear on phones */
   .corner .corner-link { padding: 7px 9px; }
   .top h1 { padding-right: 90px; }

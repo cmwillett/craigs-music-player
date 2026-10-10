@@ -14,6 +14,11 @@
 //   DB              (D1)      a D1 database. Stores only: song id, time, random device code.
 //                             Free plan: going over a limit just pauses counting; never billed.
 //   Stats can only be read with the admin page's GitHub key (checked against GitHub).
+//
+// Email subscribers (same D1 database): stores the email address, an optional first name,
+// the date, and a random unsubscribe code. Nothing else. The list can only be read with a
+// GitHub key that can write to the repo (the admin page, or Craig's desktop publisher,
+// which sends the emails from his Gmail). Anyone can remove themselves with their link.
 
 export default {
   async fetch(req, env) {
@@ -35,6 +40,10 @@ export default {
     if (path === '/play') return recordPlay(req, env, originOk, reply, 'plays');
     if (path === '/view') return recordPlay(req, env, originOk, reply, 'views'); // lyric video opened
     if (path === '/stats') return readStats(req, env, originOk, reply);
+    if (path === '/subscribe') return subscribe(req, env, originOk, reply);
+    if (path === '/unsubscribe') return unsubscribe(req, env, originOk, reply);
+    if (path === '/subscribers') return listSubscribers(req, env, reply);
+    if (path === '/subscribers/remove') return removeSubscriber(req, env, reply);
     if (req.method === 'GET') return reply({ ok: true, service: "Craig's Songs playlists", stats: !!env.DB });
     if (req.method !== 'POST') return reply({ error: 'Use POST' }, 405);
     if (!originOk) return reply({ error: 'This app is not allowed to save playlists here.' }, 403);
@@ -229,4 +238,87 @@ async function readStats(req, env, originOk, reply) {
       FROM plays WHERE ts > ?1 GROUP BY d ORDER BY d`).bind(d30, tz),
   ]);
   return reply({ ok: true, now, totals: totals.results[0], songs: songs.results, daily: daily.results });
+}
+
+// ======================================================================
+// Email subscribers ("Get new songs by email")
+// ======================================================================
+let subsReady = false;
+async function ensureSubs(env) {
+  if (subsReady) return;
+  await env.DB.prepare('CREATE TABLE IF NOT EXISTS subscribers (email TEXT PRIMARY KEY, name TEXT, token TEXT NOT NULL UNIQUE, ts INTEGER NOT NULL)').run();
+  subsReady = true;
+}
+const MAX_SUBSCRIBERS = 300; // keeps Craig's Gmail well inside its daily sending limit
+const EMAIL_RE = /^[^\s@<>()",;:]+@[^\s@<>()",;:]+\.[a-z]{2,}$/i;
+
+// POST /subscribe {email, name} from the app. Returns the unsubscribe code so the app can offer "Unsubscribe".
+async function subscribe(req, env, originOk, reply) {
+  if (req.method !== 'POST') return reply({ error: 'Use POST' }, 405);
+  if (!originOk) return reply({ error: 'Not allowed' }, 403);
+  if (!env.DB) return reply({ error: 'Email sign-up is not set up yet.' }, 501);
+  let body;
+  try { body = JSON.parse(await req.text()); } catch { return reply({ error: 'Bad request' }, 400); }
+  const email = String(body.email || '').trim().toLowerCase();
+  const name = String(body.name || '').trim().replace(/[<>\r\n]/g, '').slice(0, 40);
+  if (email.length > 254 || !EMAIL_RE.test(email)) return reply({ error: "That doesn't look like an email address." }, 400);
+  try {
+    await ensureSubs(env);
+    const have = await env.DB.prepare('SELECT token FROM subscribers WHERE email = ?').bind(email).first();
+    if (have) {
+      if (name) await env.DB.prepare('UPDATE subscribers SET name = ? WHERE email = ?').bind(name, email).run();
+      return reply({ ok: true, token: have.token, already: true });
+    }
+    const count = await env.DB.prepare('SELECT COUNT(*) AS n FROM subscribers').first();
+    if ((count?.n || 0) >= MAX_SUBSCRIBERS) return reply({ error: 'The list is full right now. Ask Craig.' }, 429);
+    const token = [...crypto.getRandomValues(new Uint8Array(16))].map((b) => b.toString(16).padStart(2, '0')).join('');
+    await env.DB.prepare('INSERT INTO subscribers (email, name, token, ts) VALUES (?, ?, ?, ?)').bind(email, name, token, Date.now()).run();
+    return reply({ ok: true, token });
+  } catch {
+    return reply({ error: "Couldn't sign you up just now. Try again later." }, 503);
+  }
+}
+
+// GET /unsubscribe?t=CODE (the link in every email; shows a small page)
+// POST /unsubscribe {token} (the app's Unsubscribe button)
+async function unsubscribe(req, env, originOk, reply) {
+  let tokenIn = new URL(req.url).searchParams.get('t') || '';
+  const fromApp = req.method === 'POST';
+  if (fromApp) {
+    if (!originOk) return reply({ error: 'Not allowed' }, 403);
+    try { tokenIn = String(JSON.parse(await req.text()).token || ''); } catch { return reply({ error: 'Bad request' }, 400); }
+  }
+  let done = false;
+  if (env.DB && /^[a-f0-9]{32}$/.test(tokenIn)) {
+    try { await ensureSubs(env); await env.DB.prepare('DELETE FROM subscribers WHERE token = ?').bind(tokenIn).run(); done = true; } catch {}
+  }
+  if (fromApp) return reply(done ? { ok: true } : { error: "Couldn't unsubscribe just now." }, done ? 200 : 503);
+  const msg = done ? "You're unsubscribed. You won't get any more emails about new songs." : 'That link didn’t work. It may be old or already used.';
+  const html = `<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Craig's Songs</title>
+<body style="margin:0;background:#14161c;color:#e9ebf0;font:17px/1.5 system-ui,sans-serif;display:grid;place-items:center;min-height:100vh;padding:20px;box-sizing:border-box">
+<div style="max-width:420px;background:#1e212a;border-radius:16px;padding:24px;text-align:center"><div style="font-size:40px">${done ? '👋' : '🤔'}</div><p>${msg}</p>
+<p style="color:#9aa0ad;font-size:14px">You can sign up again any time from the 🔔 button in the app.</p></div></body>`;
+  return new Response(html, { status: done ? 200 : 400, headers: { 'Content-Type': 'text/html; charset=utf-8' } });
+}
+
+// GET /subscribers: the list, for the admin page and the desktop publisher (GitHub key with write access).
+async function listSubscribers(req, env, reply) {
+  if (req.method !== 'GET') return reply({ error: 'Use GET' }, 405);
+  if (!env.DB) return reply({ error: 'Not set up (no D1 database linked as DB).' }, 501);
+  if (!(await isAdmin(req, env))) return reply({ error: 'Only Craig can see the list.' }, 401);
+  await ensureSubs(env);
+  const rows = await env.DB.prepare('SELECT email, name, token, ts FROM subscribers ORDER BY ts').all();
+  return reply({ ok: true, subscribers: rows.results });
+}
+
+// POST /subscribers/remove {email} from the admin page.
+async function removeSubscriber(req, env, reply) {
+  if (req.method !== 'POST') return reply({ error: 'Use POST' }, 405);
+  if (!env.DB) return reply({ error: 'Not set up.' }, 501);
+  if (!(await isAdmin(req, env))) return reply({ error: 'Only Craig can do that.' }, 401);
+  let body;
+  try { body = JSON.parse(await req.text()); } catch { return reply({ error: 'Bad request' }, 400); }
+  await ensureSubs(env);
+  await env.DB.prepare('DELETE FROM subscribers WHERE email = ?').bind(String(body.email || '').toLowerCase()).run();
+  return reply({ ok: true });
 }

@@ -73,6 +73,16 @@ const HELP = (() => {
       </ul>`,
     },
     {
+      id: 'email',
+      title: '🔔 Get new songs by email',
+      show: () => !!(data.community && data.community.api),
+      html: `<ul>
+        <li>Tap <b>🔔</b> at the top, type your email (and first name if you like), and tap <b>Subscribe</b>.</li>
+        <li>When Craig adds a new song you get an email with a <b>Listen</b> link that opens it right in the app.</li>
+        <li>To stop: tap <b>🔔</b> → <b>Unsubscribe</b>, or use the unsubscribe link at the bottom of any email.</li>
+      </ul>`,
+    },
+    {
       id: 'share',
       title: '📤 Share a song',
       html: `<ul>

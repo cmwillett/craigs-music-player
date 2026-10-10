@@ -169,6 +169,7 @@ async function loadStats() {
     const before = statsData ? TILES.map((s) => $(s).textContent) : null;
     statsData = body;
     renderStats();
+    loadSubscribers();
     if (before) TILES.forEach((s, i) => {
       const tile = $(s).parentElement;
       if ($(s).textContent !== before[i]) { tile.classList.remove('changed'); void tile.offsetWidth; tile.classList.add('changed'); }
@@ -188,6 +189,41 @@ async function loadStats() {
       setTimeout(() => { btn.classList.remove('done'); lbl.textContent = 'Refresh'; }, 1500);
     } else lbl.textContent = 'Refresh';
   }
+}
+
+// ---------- email subscribers ----------
+async function loadSubscribers() {
+  const api = (current?.community?.api || '').replace(/\/+$/, '');
+  if (!api) return;
+  $('#subs-link').textContent = new URL('./?subscribe', location.href.replace(/admin\.html.*$/, '')).href;
+  try {
+    const res = await fetch(`${api}/subscribers`, { headers: { Authorization: `Bearer ${token}` }, cache: 'no-store' });
+    const body = await res.json().catch(() => ({}));
+    if (!res.ok || !body.ok) {
+      say('#subs-msg', res.status === 404 || res.status === 405 ? 'Paste the latest worker/playlist-worker.js into your Cloudflare helper and Deploy.' : (body.error || `Error ${res.status}`), 'err');
+      return;
+    }
+    say('#subs-msg', '');
+    const subs = body.subscribers || [];
+    $('#subs-count').textContent = `(${subs.length})`;
+    const ul = $('#subs-list');
+    ul.replaceChildren();
+    if (!subs.length) { const li = document.createElement('li'); li.innerHTML = '<span class="who hint">Nobody yet. Send people the invite link above.</span>'; ul.append(li); }
+    subs.forEach((s) => {
+      const li = document.createElement('li');
+      const who = document.createElement('span'); who.className = 'who'; who.textContent = s.name ? `${s.name} · ${s.email}` : s.email;
+      const when = document.createElement('span'); when.className = 'when'; when.textContent = new Date(s.ts).toLocaleDateString([], { month: 'short', day: 'numeric' });
+      const rm = document.createElement('button'); rm.textContent = 'Remove'; rm.className = 'danger';
+      rm.onclick = async () => {
+        if (!confirm(`Remove ${s.email} from the email list?`)) return;
+        rm.disabled = true;
+        const r = await fetch(`${api}/subscribers/remove`, { method: 'POST', headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ email: s.email }) });
+        if (r.ok) loadSubscribers(); else { rm.disabled = false; say('#subs-msg', "Couldn't remove. Try again.", 'err'); }
+      };
+      li.append(who, when, rm);
+      ul.append(li);
+    });
+  } catch { say('#subs-msg', "Couldn't load subscribers.", 'err'); }
 }
 
 function renderStats() {

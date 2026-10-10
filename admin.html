@@ -45,6 +45,11 @@
     .pl-songs li span { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .pl-songs li button { width: 34px; height: 34px; border-radius: 8px; background: var(--card-2); }
     .pl-add, .edit-row select { width: 100%; margin-top: 8px; padding: 12px; border-radius: 10px; border: 1px solid #3a3f4c; background: var(--bg); color: var(--text); font: inherit; }
+    .subs-list { list-style: none; padding: 0; margin: 8px 0 0; }
+    .subs-list li { display: flex; align-items: center; gap: 10px; padding: 9px 0; border-top: 1px solid #2c303b; }
+    .subs-list li .who { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+    .subs-list li .when { color: var(--muted); font-size: .8rem; white-space: nowrap; }
+    .subs-list li button { padding: 6px 10px; border-radius: 8px; background: var(--card-2, #272b36); }
     .check { display: flex; align-items: center; gap: 8px; margin-top: 12px; color: var(--text); font-size: .95rem; }
     .stats-head { display: flex; align-items: center; justify-content: space-between; }
     .stats-right { display: flex; align-items: center; gap: 10px; }
@@ -161,6 +166,13 @@
         </div>
         <label class="check" style="margin-top:14px"><input id="stats-me" type="checkbox"> Don't count plays from this device (it's me)</label>
         <p class="hint" style="margin-top:4px">Turn this on for each of your own phones and computers so the numbers are only other people. "Listeners" = different devices.</p>
+      </div>
+
+      <div class="card">
+        <h2 style="margin-top:0;color:var(--text)">Email subscribers <span id="subs-count" class="hint"></span></h2>
+        <p class="hint">People who tapped 🔔 in the app. Your desktop publisher emails them when a new song is published (not for files named "Trial …"). Invite link: <code id="subs-link"></code></p>
+        <ul id="subs-list" class="subs-list"></ul>
+        <div id="subs-msg" class="msg"></div>
       </div>
 
       </div>
