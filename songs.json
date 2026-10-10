@@ -163,9 +163,10 @@
       "id": "firecracker",
       "title": "Firecracker",
       "file": "music/firecracker.mp3",
-      "cover": "",
+      "cover": "covers/firecracker.jpg",
       "tags": [],
-      "added": "2026-10-10"
+      "added": "2026-10-10",
+      "description": "This song is about my friend Bill's redheaded daughter.   She's an athlete who absolutely adores her dad's friend Craig (me)..."
     }
   ],
   "playlists": [
