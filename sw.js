@@ -2,7 +2,7 @@
 // (and songs.json is always fetched fresh) so new songs show up right away.
 importScripts('version.js');
 const CACHE = 'songs-shell-' + APP_VERSION;
-const SHELL = ['./', 'index.html', 'version.js', 'styles.css', 'app.js', 'spotify.js', 'community.js', 'help.js', 'lyrics.js', 'subscribe.js', 'manifest.webmanifest', 'icons/icon-192.png', 'icons/icon-512.png'];
+const SHELL = ['./', 'index.html', 'version.js', 'styles.css', 'app.js', 'spotify.js', 'adminlink.js', 'community.js', 'help.js', 'lyrics.js', 'subscribe.js', 'manifest.webmanifest', 'icons/icon-192.png', 'icons/icon-512.png'];
 
 self.addEventListener('install', (e) => {
   e.waitUntil(caches.open(CACHE).then((c) => c.addAll(SHELL)).then(() => self.skipWaiting()));

@@ -32,7 +32,7 @@ const CM = (() => {
     save(OVERLAY, list);
     d.playlists = d.playlists || [];
     list.forEach((o) => {
-      const i = d.playlists.findIndex((p) => p.id === o.id);
+      const i = d.playlists.findIndex((p) => (p.id || p.name) === o.id);
       if (o.playlist === null) { if (i >= 0) d.playlists.splice(i, 1); return; }
       if (i >= 0) d.playlists[i] = o.playlist; else d.playlists.push(o.playlist);
     });
@@ -178,13 +178,30 @@ const CM = (() => {
         el('div', { className: 'cover' }),
         el('div', { className: 'pick-text' },
           el('div', { className: 'title', textContent: p.name }),
-          el('div', { className: 'meta', textContent: adding ? `${(p.songs || []).length} songs · adds ${adding}` : 'Already has all of these' })));
+          el('div', { className: 'meta', textContent: adding ? `${(p.songs || []).length} song${(p.songs || []).length === 1 ? '' : 's'} · adds ${adding}` : 'Already has all of these' })));
       b.disabled = !adding;
       b.onclick = () => addTo(p, b);
       ul.append(el('li', {}, b));
     });
-    $('#pick-note').textContent = mine.length
-      ? 'You can add to playlists you made on this device.'
+    // Craig's own playlists (made in Admin) when this device has Admin set up: needs the Admin PIN.
+    const craigs = ADMIN.available() ? (data.playlists || []).filter((p) => !p.user && Array.isArray(p.songs)) : [];
+    if (craigs.length) {
+      ul.append(el('li', { className: 'pick-head', textContent: "Craig's playlists · Admin PIN" }));
+      craigs.forEach((p) => {
+        const have = new Set(p.songs);
+        const adding = ids.filter((id) => !have.has(id)).length;
+        const b = el('button', { className: 'pick-row' },
+          el('div', { className: 'cover' }),
+          el('div', { className: 'pick-text' },
+            el('div', { className: 'title', textContent: p.name + (p.hidden ? ' (hidden)' : '') }),
+            el('div', { className: 'meta', textContent: adding ? `${p.songs.length} song${p.songs.length === 1 ? '' : 's'} · adds ${adding}` : 'Already has all of these' })));
+        b.disabled = !adding;
+        b.onclick = () => addToCraigs(p, b);
+        ul.append(el('li', {}, b));
+      });
+    }
+    $('#pick-note').textContent = mine.length || craigs.length
+      ? (craigs.length ? 'Playlists you made in the app on this device, plus your Admin playlists.' : 'You can add to playlists you made on this device.')
       : "Playlists you make will show up here so you can add to them later.";
     $('#pick-modal').hidden = false;
     document.body.classList.add('modal-open');
@@ -211,6 +228,31 @@ const CM = (() => {
         showPlaylist(res.playlist.id);
       }, 5000);
     } catch (e) { $('#pick-msg').textContent = e.message; btn.disabled = false; }
+  }
+  // Add to one of Craig's Admin playlists: straight to GitHub with the Admin key (unlocked with the PIN).
+  async function addToCraigs(p, btn) {
+    const key = p.id || p.name;
+    btn.disabled = true;
+    try {
+      if (!ADMIN.unlocked()) {
+        $('#pick-msg').textContent = '';
+        await ADMIN.unlock($('#pick-msg'));
+      }
+      $('#pick-msg').textContent = 'Saving…';
+      const res = await ADMIN.addSongs(key, pickIds);
+      remember(key, res.playlist);
+      applyOverlay(data);
+      closePick();
+      renderPlaylists();
+      if (typeof setSelecting === 'function') setSelecting(false);
+      toast(res.added ? `Added ${res.added} song${res.added === 1 ? '' : 's'} to ${p.name}.` : `${p.name} already had ${pickIds.length === 1 ? 'it' : 'them'}.`, 'View', () => {
+        document.querySelector('.tab[data-view=playlists]').click();
+        showPlaylist(key);
+      }, 5000);
+    } catch (e) {
+      if (e.message !== 'cancelled') $('#pick-msg').textContent = e.message;
+      btn.disabled = false;
+    }
   }
   $('#pick-close').onclick = closePick;
   $('#pick-modal').addEventListener('click', (e) => { if (e.target.id === 'pick-modal') closePick(); });

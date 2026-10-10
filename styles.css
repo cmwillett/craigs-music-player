@@ -274,6 +274,10 @@ body.selecting .row .now { display: none; }
 .pick-row .cover { width: 44px; height: 44px; }
 .pick-text { min-width: 0; flex: 1; }
 .pick-new { font-weight: 700; }
+.pick-head { color: var(--muted); font-size: .8rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; margin: 10px 2px 0; }
+.pin-row { display: flex; gap: 8px; margin-top: 8px; }
+.pin-row input { flex: 1; min-width: 0; }
+.pin-row button { flex: none; padding: 0 16px; border-radius: 10px; background: var(--accent); color: var(--accent-ink); font-weight: 700; }
 .pick-plus { width: 44px; height: 44px; border-radius: 10px; background: var(--accent); color: var(--accent-ink); display: inline-flex; align-items: center; justify-content: center; font-size: 1.5rem; }
 .pick-note { color: var(--muted); font-size: .85rem; margin: 12px 2px 0; }
 
