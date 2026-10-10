@@ -158,6 +158,14 @@
       ],
       "added": "2026-10-07",
       "description": "Halloween song personalized for our home - will be on repeat Halloween night.  It talks about the decorations and stuff we have out in the yard!"
+    },
+    {
+      "id": "firecracker",
+      "title": "Firecracker",
+      "file": "music/firecracker.mp3",
+      "cover": "",
+      "tags": [],
+      "added": "2026-10-10"
     }
   ],
   "playlists": [
