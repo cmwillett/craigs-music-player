@@ -300,13 +300,19 @@ body.selecting .row .now { display: none; }
 .corner .corner-link { position: static; }
 .help-btn { width: 36px; justify-content: center; padding: 7px 0; font-size: 1rem; font-weight: 800; color: var(--text); }
 .top h1 { padding-right: 150px; }
-.top.has-sub h1 { padding-right: 194px; }
+.top.has-sub h1 { padding-right: 260px; }
+.top.has-sub.subbed h1 { padding-right: 194px; }
 .sub-btn[hidden] { display: none; }
-.sub-btn { font-size: .95rem; }
+.sub-btn { font-size: .95rem; width: auto !important; padding: 7px 12px !important; gap: 5px; }
+.sub-btn .sub-lbl { font-size: .85rem; font-weight: 700; color: var(--accent); }
+.sub-btn.on { padding: 7px 0 !important; width: 36px !important; }
+.sub-btn.on .sub-lbl { display: none; }   /* already subscribed: just the bell */
 .sub-btn.on { box-shadow: inset 0 0 0 2px var(--accent); }
 .sub-text { margin: 4px 0 6px; line-height: 1.5; }
 @media (max-width: 420px) {
-  .top.has-sub h1 { padding-right: 134px; }
+  .top.has-sub h1 { padding-right: 226px; font-size: 1.3rem; }
+  .top.has-sub:not(.subbed) h1 .version { display: block; margin-top: 2px; }
+  .top.has-sub.subbed h1 { padding-right: 134px; font-size: 1.6rem; }
   .corner .corner-link span { display: none; }   /* Admin shows as just the gear on phones */
   .corner .corner-link { padding: 7px 9px; }
   .top h1 { padding-right: 90px; }

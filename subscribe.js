@@ -12,6 +12,7 @@ const SUB = (() => {
   function paint() {
     const m = mine();
     $('#sub-btn').classList.toggle('on', !!m);
+    document.querySelector('.top').classList.toggle('subbed', !!m);
     $('#sub-btn').title = m ? "You're getting new songs by email" : 'Get new songs by email';
     $('#sub-form').hidden = !!m;
     $('#sub-done').hidden = !m;
