@@ -743,3 +743,26 @@ if (isIOS) showInstall('ios');
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
 }
+
+// ---------- Admin on top of the app (music keeps playing) ----------
+(() => {
+  const view = $('#admin-view'), frame = $('#admin-frame');
+  function openAdmin() {
+    if (!frame.src) frame.src = 'admin.html';
+    view.hidden = false;
+    document.body.classList.add('admin-open');
+    history.pushState({ admin: true }, ''); // phone Back button closes Admin
+  }
+  function closeAdmin(fromBack) {
+    if (view.hidden) return;
+    view.hidden = true;
+    document.body.classList.remove('admin-open');
+    if (!fromBack && history.state?.admin) history.back();
+  }
+  $('#admin-link').addEventListener('click', (e) => { e.preventDefault(); openAdmin(); });
+  window.addEventListener('popstate', () => closeAdmin(true));
+  window.addEventListener('message', (e) => {
+    if (e.origin !== location.origin) return;
+    if (e.data?.type === 'admin-close') closeAdmin(false);
+  });
+})();

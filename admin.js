@@ -749,3 +749,9 @@ $('#sp-save').onclick = () => {
 // ---------- boot ----------
 if (stored()) show('lock');
 else { $('#setup-repo').value = guessRepo(); show('setup'); }
+
+// Opened on top of the app (so music keeps playing): "Songs" just closes Admin.
+if (window.parent !== window) {
+  const back = document.querySelector('.corner-link');
+  if (back) back.addEventListener('click', (e) => { e.preventDefault(); window.parent.postMessage({ type: 'admin-close' }, location.origin); });
+}
