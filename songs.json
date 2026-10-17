@@ -185,6 +185,14 @@
       "tags": [],
       "added": "2026-10-17",
       "description": "Just a song about a normal Friday night in the hood with the guys..."
+    },
+    {
+      "id": "streamwood-boyz-heavier-rock",
+      "title": "Streamwood Boyz - Heavier Rock",
+      "file": "music/streamwood-boyz-heavier-rock.mp3",
+      "cover": "covers/streamwood-boyz-heavier-rock.jpg",
+      "tags": [],
+      "added": "2026-10-17"
     }
   ],
   "playlists": [
