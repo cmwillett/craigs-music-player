@@ -176,6 +176,14 @@
       "tags": [],
       "added": "2026-10-16",
       "description": "This song represents my daughter and her two friends!  They are inseparable!"
+    },
+    {
+      "id": "streamwood-boyz",
+      "title": "Streamwood Boyz",
+      "file": "music/streamwood-boyz.mp3",
+      "cover": "covers/streamwood-boyz.jpg",
+      "tags": [],
+      "added": "2026-10-17"
     }
   ],
   "playlists": [
