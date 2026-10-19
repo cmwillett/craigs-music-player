@@ -167,6 +167,33 @@
       "tags": [],
       "added": "2026-10-10",
       "description": "This song is about my friend Bill's redheaded daughter.   She's an athlete who absolutely adores her dad's friend Craig (me)..."
+    },
+    {
+      "id": "2ks-country-rap",
+      "title": "2KS - Country Rap",
+      "file": "music/2ks-country-rap.mp3",
+      "cover": "covers/2ks-country-rap.jpg",
+      "tags": [],
+      "added": "2026-10-16",
+      "description": "This song represents my daughter and her two friends!  They are inseparable!"
+    },
+    {
+      "id": "streamwood-boyz",
+      "title": "Streamwood Boyz",
+      "file": "music/streamwood-boyz.mp3",
+      "cover": "covers/streamwood-boyz.jpg",
+      "tags": [],
+      "added": "2026-10-17",
+      "description": "Just a song about a normal Friday night in the hood with the guys..."
+    },
+    {
+      "id": "streamwood-boyz-heavier-rock",
+      "title": "Streamwood Boyz - Heavier Rock",
+      "file": "music/streamwood-boyz-heavier-rock.mp3",
+      "cover": "covers/streamwood-boyz-heavier-rock.jpg",
+      "tags": [],
+      "added": "2026-10-17",
+      "description": "Just a song about a normal Friday night in the hood with the guys..."
     }
   ],
   "playlists": [
