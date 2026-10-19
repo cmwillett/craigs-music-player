@@ -568,8 +568,9 @@ function load(i) {
   if (typeof SP !== 'undefined') SP.yieldToLocal();
   index = (i + queue.length) % queue.length;
   const song = queue[index];
-  audio.src = song.file;
+  audio.src = SONGS.get(song.id)?.url || song.file; // already downloaded? play it from memory
   audio.play().catch(() => {});
+  prepareSongs();
   $('#player').hidden = false;
   $('#np-title').textContent = song.title;
   const c = $('#np-cover');
@@ -654,6 +655,7 @@ audio.addEventListener('timeupdate', () => {
   if (d && !seeking) $('#seek').value = (audio.currentTime / d) * 100;
 });
 audio.addEventListener('error', () => {
+  if (recover('error')) return;
   $('#np-time').textContent = "Couldn't load this song";
 });
 
@@ -665,6 +667,88 @@ seek.addEventListener('change', () => {
   else if (audio.duration) audio.currentTime = (seek.value / 100) * audio.duration;
   seeking = false;
 });
+
+// ---------- keep playing in the background ----------
+// Phones cut off a background app's internet to save battery. A song that's still streaming then
+// stops mid-way until the app is opened again. So: download the whole song into memory as soon as it
+// starts (and the next one after it), switch to the downloaded copy, and if playback ever stalls,
+// pick up again at the same spot.
+const SONGS = new Map(); // song id -> { url (in-memory copy), promise, ctrl }
+function fetchSong(song) {
+  let e = SONGS.get(song.id);
+  if (e) return e.promise;
+  e = { ctrl: new AbortController(), url: null };
+  e.promise = fetch(song.file, { signal: e.ctrl.signal })
+    .then((r) => { if (!r.ok) throw new Error(r.status); return r.blob(); })
+    .then((b) => { e.url = URL.createObjectURL(b); return e.url; })
+    .catch((err) => { if (SONGS.get(song.id) === e) SONGS.delete(song.id); throw err; });
+  SONGS.set(song.id, e);
+  return e.promise;
+}
+function upcomingSong() {
+  if (!queue.length || modes.repeat === 'one') return null;
+  if (index < queue.length - 1) return queue[index + 1];
+  return modes.repeat === 'all' ? queue[0] : null;
+}
+function prepareSongs() {
+  const cur = queue[index], nxt = upcomingSong();
+  const keep = new Set([cur?.id, nxt?.id]);
+  for (const [id, e] of SONGS) {
+    if (keep.has(id)) continue;
+    e.ctrl.abort();
+    if (e.url && audio.src !== e.url) URL.revokeObjectURL(e.url);
+    SONGS.delete(id);
+  }
+  if (!cur) return;
+  fetchSong(cur)
+    .then(() => { if (queue[index] === cur) { useDownloaded(false); if (nxt) fetchSong(nxt).catch(() => {}); } })
+    .catch(() => {});
+}
+// Move playback onto the downloaded copy at the same spot. Done right away when the app is in the
+// background or paused (nobody hears it); while you're watching it waits, to avoid a tiny blip.
+function useDownloaded(force) {
+  const cur = queue[index];
+  const e = cur && SONGS.get(cur.id);
+  if (!e?.url || audio.src === e.url || spOn()) return false;
+  if (!force && !document.hidden && !audio.paused) return false;
+  const at = audio.currentTime, wasPlaying = !audio.paused;
+  swapping = true;
+  setTimeout(() => { swapping = false; }, 15000); // never stay stuck if it doesn't load
+  audio.src = e.url;
+  audio.addEventListener('loadedmetadata', () => {
+    try { audio.currentTime = at; } catch {}
+    if (wasPlaying) audio.play().catch(() => {});
+    swapping = false;
+  }, { once: true });
+  return true;
+}
+let swapping = false;
+document.addEventListener('visibilitychange', () => { if (document.hidden) useDownloaded(false); });
+audio.addEventListener('waiting', () => { if (document.hidden) useDownloaded(true); }); // stuck in the background: switch now
+audio.addEventListener('pause', () => { if (!swapping) setTimeout(() => useDownloaded(false), 0); });
+
+// Stall watchdog: playing but the time hasn't moved for a while -> recover.
+let lastT = -1, stuckSince = 0, retries = 0;
+function recover(why) {
+  const cur = queue[index];
+  if (!cur || spOn()) return false;
+  if (useDownloaded(true)) return true;      // the downloaded copy is ready: switch to it
+  if (retries >= 3) return false;
+  retries++;
+  const at = audio.currentTime;              // otherwise reconnect to the stream at the same spot
+  swapping = true;
+  setTimeout(() => { swapping = false; }, 15000); // never stay stuck if it doesn't load
+  audio.src = cur.file + (cur.file.includes('?') ? '&' : '?') + 'r=' + Date.now();
+  audio.addEventListener('loadedmetadata', () => { try { audio.currentTime = at; } catch {} audio.play().catch(() => {}); swapping = false; }, { once: true });
+  fetchSong(cur).then(() => useDownloaded(true)).catch(() => {});
+  return true;
+}
+setInterval(() => {
+  if (audio.paused || !audio.src || spOn() || swapping) { stuckSince = 0; return; }
+  if (audio.currentTime !== lastT) { lastT = audio.currentTime; stuckSince = 0; retries = 0; return; }
+  if (!stuckSince) stuckSince = Date.now();
+  else if (Date.now() - stuckSince > 8000) { stuckSince = 0; recover('stalled'); }
+}, 2000);
 
 // ---------- tabs ----------
 document.querySelectorAll('.tab').forEach((t) => {
