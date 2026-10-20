@@ -194,6 +194,14 @@
       "tags": [],
       "added": "2026-10-17",
       "description": "Just a song about a normal Friday night in the hood with the guys..."
+    },
+    {
+      "id": "the-arling-surprise",
+      "title": "The Arling Surprise",
+      "file": "music/the-arling-surprise.mp3",
+      "cover": "covers/the-arling-surprise.jpg",
+      "tags": [],
+      "added": "2026-10-20"
     }
   ],
   "playlists": [
