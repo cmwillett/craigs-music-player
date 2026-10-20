@@ -66,6 +66,9 @@
     @media (prefers-reduced-motion: reduce) { .stats-refresh.loading .spin-icon, .tile.changed { animation: none; } }
     .tiles { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin-top: 10px; }
     @media (max-width: 480px) { .tiles { gap: 6px; } .tile { padding: 10px 8px; } .tile-num { font-size: 1.35rem !important; } .tile-label { font-size: .72rem !important; } }
+    .stats-table th { cursor: pointer; user-select: none; }
+    .stats-table th:hover, .stats-table th.sorted { color: var(--text); }
+    .stats-table th::after { content: attr(data-arrow); font-size: .65rem; margin-left: 3px; color: var(--accent); }
     .stats-table td.hot { color: var(--accent); font-weight: 700; }
     .tile { background: var(--bg); border-radius: 12px; padding: 12px; }
     .tile-num { font-size: 1.7rem; font-weight: 800; line-height: 1.1; font-variant-numeric: tabular-nums; }

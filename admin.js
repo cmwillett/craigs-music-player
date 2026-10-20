@@ -300,25 +300,55 @@ function renderStats() {
   const rowsIn = [...(s.songs || [])];
   [dl, sh, op].forEach((m) => m.forEach((r, song) => { if (!rowsIn.some((x) => x.song === song)) rowsIn.push({ song, plays: 0, plays30: 0, playsToday: 0, devices: 0, last: r.last }); }));
   const lastOf = (r) => Math.max(r.last || 0, ...[dl, sh, op].map((m) => m.get(r.song)?.last || 0));
-  const rows = rowsIn.sort((x, y) => (y.playsToday || 0) - (x.playsToday || 0) || y.plays - x.plays);
-  const hasToday = rows.some((r) => 'playsToday' in r); // older helper code doesn't send it
+  const hasToday = rowsIn.some((r) => 'playsToday' in r); // older helper code doesn't send it
+  // One value per column (same order as the table headers), used for both showing and sorting.
+  const rows = rowsIn.map((r) => {
+    const last = lastOf(r);
+    return { r, v: [titles[r.song] || r.song, r.playsToday || 0, r.plays30 || 0, r.plays || 0, r.devices || 0,
+      dl.get(r.song)?.downloads || 0, sh.get(r.song)?.shares || 0, op.get(r.song)?.opens || 0, last] };
+  });
+  const { col, dir } = statsSort;
+  rows.sort((x, y) => {
+    const a = x.v[col], b = y.v[col];
+    const c = col === 0 ? String(a).localeCompare(String(b)) : a - b;
+    return (dir === 'asc' ? c : -c) || (y.v[1] - x.v[1]) || (y.v[3] - x.v[3]); // ties: today, then all time
+  });
+  document.querySelectorAll('.stats-table th').forEach((th, i) => {
+    th.classList.toggle('sorted', i === col);
+    th.dataset.arrow = i === col ? (dir === 'asc' ? '▲' : '▼') : '';
+  });
   if (!rows.length) {
     const tr = document.createElement('tr');
     tr.innerHTML = '<td colspan="9" style="color:var(--muted)">No plays yet.</td>';
     tbody.append(tr);
   }
-  rows.forEach((r) => {
+  rows.forEach(({ r, v }) => {
     const tr = document.createElement('tr');
-    const cells = [titles[r.song] || r.song, hasToday ? fmtN(r.playsToday) : '–', fmtN(r.plays30), fmtN(r.plays), fmtN(r.devices), fmtN(dl.get(r.song)?.downloads), fmtN(sh.get(r.song)?.shares), fmtN(op.get(r.song)?.opens), lastOf(r) ? ago(lastOf(r)) : ''];
-    cells.forEach((v, i) => {
+    const cells = [v[0], hasToday ? fmtN(v[1]) : '–', fmtN(v[2]), fmtN(v[3]), fmtN(v[4]), fmtN(v[5]), fmtN(v[6]), fmtN(v[7]), v[8] ? ago(v[8]) : ''];
+    cells.forEach((text, i) => {
       const td = document.createElement('td');
-      td.textContent = v;
+      td.textContent = text;
       if (i >= 1 && i <= 7) td.className = 'num' + (i === 1 && r.playsToday ? ' hot' : '');
       tr.append(td);
     });
     tbody.append(tr);
   });
 }
+
+// Tap a column heading to sort by it; tap again to flip the order. Remembered on this device.
+const STATS_SORT = 'stats-sort-v1';
+let statsSort = (() => { try { return JSON.parse(localStorage.getItem(STATS_SORT)) || { col: 1, dir: 'desc' }; } catch { return { col: 1, dir: 'desc' }; } })();
+document.querySelectorAll('.stats-table th').forEach((th, i) => {
+  th.tabIndex = 0;
+  th.setAttribute('role', 'button');
+  const go = () => {
+    statsSort = statsSort.col === i ? { col: i, dir: statsSort.dir === 'asc' ? 'desc' : 'asc' } : { col: i, dir: i === 0 ? 'asc' : 'desc' };
+    try { localStorage.setItem(STATS_SORT, JSON.stringify(statsSort)); } catch {}
+    if (statsData) renderStats();
+  };
+  th.addEventListener('click', go);
+  th.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go(); } });
+});
 
 $('#setup-save').onclick = async () => {
   const r = $('#setup-repo').value.trim(), t = $('#setup-token').value.trim(), p = $('#setup-pin').value.trim();
