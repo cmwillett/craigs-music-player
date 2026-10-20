@@ -136,7 +136,7 @@ function countPlay(song, kind = 'play') {
   const device = statsDevice();
   if (!device) return;
   // text/plain body = no CORS preflight; keepalive lets it finish even if the app is closed.
-  fetch(api.replace(/\/+$/, '') + (kind === 'view' ? '/view' : '/play'), { method: 'POST', body: JSON.stringify({ song: song.id, device }), keepalive: true }).catch(() => {});
+  fetch(api.replace(/\/+$/, '') + (kind === 'download' ? '/download' : kind === 'view' ? '/view' : '/play'), { method: 'POST', body: JSON.stringify({ song: song.id, device }), keepalive: true }).catch(() => {});
 }
 
 // ---------- shuffle / repeat ----------
@@ -307,6 +307,7 @@ function openSongSheet(song, list = null, src = null) {
     }
   }
   actions.append(btn(SHARE_ICON + '&nbsp; Share', '', () => shareSong(song)));
+  if (data.downloads !== false && song.file) actions.append(btn('⬇&nbsp; Download MP3', '', (e) => downloadSong(song, e.currentTarget)));
   if (typeof CM !== 'undefined' && data?.community?.api) {
     actions.append(btn('➕&nbsp; Add to playlist', '', () => { closeSongSheet(); CM.pickPlaylist([song.id]); }));
   }
@@ -314,6 +315,32 @@ function openSongSheet(song, list = null, src = null) {
 
   $('#song-sheet').hidden = false;
   document.body.classList.add('modal-open');
+}
+// Save the MP3 (with its title, cover art and lyrics inside) as "<Title>.mp3".
+async function downloadSong(song, button) {
+  const label = button.innerHTML;
+  button.disabled = true;
+  button.innerHTML = '⬇&nbsp; Downloading…';
+  try {
+    let url = SONGS.get(song.id)?.url; // already in memory because it's playing (or up next)?
+    let temp = null;
+    if (!url) {
+      const res = await fetch(song.file);
+      if (!res.ok) throw new Error(res.status);
+      url = temp = URL.createObjectURL(await res.blob());
+    }
+    const name = (song.title || song.id).replace(/[\\/:*?"<>|]+/g, '').trim() || song.id;
+    const a = el('a', { href: url, download: `${name}.mp3` });
+    document.body.append(a); a.click(); a.remove();
+    if (temp) setTimeout(() => URL.revokeObjectURL(temp), 60000);
+    countPlay(song, 'download');
+    toast(`Saved "${name}.mp3" to your downloads.`);
+  } catch {
+    toast("Couldn't download it. Check your connection and try again.");
+  } finally {
+    button.disabled = false;
+    button.innerHTML = label;
+  }
 }
 function closeSongSheet() {
   $('#song-sheet').hidden = true;

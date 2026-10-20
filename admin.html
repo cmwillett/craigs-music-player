@@ -160,7 +160,7 @@
           <div id="st-tip" class="chart-tip" hidden></div>
           <h3 class="stats-sub">By song</h3>
           <div class="table-wrap"><table class="stats-table">
-            <thead><tr><th>Song</th><th class="num">Today</th><th class="num">Plays 30d</th><th class="num">All time</th><th class="num">Listeners</th><th>Last</th></tr></thead>
+            <thead><tr><th>Song</th><th class="num">Today</th><th class="num">Plays 30d</th><th class="num">All time</th><th class="num">Listeners</th><th class="num">Downloads</th><th>Last</th></tr></thead>
             <tbody id="st-songs"></tbody>
           </table></div>
         </div>
@@ -216,6 +216,12 @@
       </div>
 
       <div class="apanel" data-panel="settings" hidden>
+      <div class="card">
+        <h2 style="margin-top:0;color:var(--text)">Downloads</h2>
+        <label class="check" style="margin-top:4px"><input id="dl-on" type="checkbox"> Let people download songs as MP3s (⋯ → Download MP3)</label>
+        <div id="dl-msg" class="msg"></div>
+      </div>
+
       <div class="card">
         <h2 style="margin-top:0;color:var(--text)">Playlists from the app</h2>
         <p class="hint">Lets anyone using the app make playlists (they can change only their own; you can manage all of them above). Needs the small Cloudflare helper. Follow <code>worker/SETUP.md</code> in your repo, then paste its address here.</p>

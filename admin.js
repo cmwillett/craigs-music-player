@@ -292,20 +292,24 @@ function renderStats() {
   };
   const tbody = $('#st-songs');
   tbody.replaceChildren();
-  const rows = [...(s.songs || [])].sort((x, y) => (y.playsToday || 0) - (x.playsToday || 0) || y.plays - x.plays);
+  // Downloads per song (songs that were downloaded but never played still get a row).
+  const dl = new Map((s.downloads || []).map((r) => [r.song, r]));
+  const rowsIn = [...(s.songs || [])];
+  dl.forEach((r, song) => { if (!rowsIn.some((x) => x.song === song)) rowsIn.push({ song, plays: 0, plays30: 0, playsToday: 0, devices: 0, last: r.last }); });
+  const rows = rowsIn.sort((x, y) => (y.playsToday || 0) - (x.playsToday || 0) || y.plays - x.plays);
   const hasToday = rows.some((r) => 'playsToday' in r); // older helper code doesn't send it
   if (!rows.length) {
     const tr = document.createElement('tr');
-    tr.innerHTML = '<td colspan="6" style="color:var(--muted)">No plays yet.</td>';
+    tr.innerHTML = '<td colspan="7" style="color:var(--muted)">No plays yet.</td>';
     tbody.append(tr);
   }
   rows.forEach((r) => {
     const tr = document.createElement('tr');
-    const cells = [titles[r.song] || r.song, hasToday ? fmtN(r.playsToday) : '–', fmtN(r.plays30), fmtN(r.plays), fmtN(r.devices), r.last ? ago(r.last) : ''];
+    const cells = [titles[r.song] || r.song, hasToday ? fmtN(r.playsToday) : '–', fmtN(r.plays30), fmtN(r.plays), fmtN(r.devices), fmtN(dl.get(r.song)?.downloads), r.last ? ago(Math.max(r.last, dl.get(r.song)?.last || 0)) : ''];
     cells.forEach((v, i) => {
       const td = document.createElement('td');
       td.textContent = v;
-      if (i >= 1 && i <= 4) td.className = 'num' + (i === 1 && r.playsToday ? ' hot' : '');
+      if (i >= 1 && i <= 5) td.className = 'num' + (i === 1 && r.playsToday ? ' hot' : '');
       tr.append(td);
     });
     tbody.append(tr);
@@ -397,6 +401,7 @@ function render() {
   renderPlaylistEditors(data);
   $('#sp-lists').value = (data.spotifyPlaylists || []).map((p) => `${p.name} | ${p.url}`).join('\n');
   $('#sp-client').value = data.spotify?.clientId || '';
+  $('#dl-on').checked = data.downloads !== false;
   $('#cm-api').value = data.community?.api || '';
   renderPending();
 }
@@ -730,6 +735,12 @@ $('#sp-copy').onclick = async () => {
   try { await navigator.clipboard.writeText($('#sp-redirect').textContent); $('#sp-copy').textContent = 'Copied!'; }
   catch { $('#sp-copy').textContent = 'Select it and copy'; }
 };
+$('#dl-on').onchange = (e) => {
+  const on = e.target.checked;
+  queue(on ? 'Turn on MP3 downloads' : 'Turn off MP3 downloads', (d) => { if (on) delete d.downloads; else d.downloads = false; });
+  say('#dl-msg', 'Added to your changes. Tap Save all.', 'ok');
+};
+
 $('#sp-client-save').onclick = () => {
   const id = $('#sp-client').value.trim();
   if (id && !/^[0-9a-f]{32}$/i.test(id)) return say('#sp-client-msg', "That doesn't look like a Spotify Client ID (32 letters and numbers).", 'err');

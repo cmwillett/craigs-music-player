@@ -84,12 +84,15 @@ const HELP = (() => {
     },
     {
       id: 'share',
-      title: '📤 Share a song',
+      title: '📤 Share or download a song',
       html: `<ul>
         <li>Tap <b>⋯</b> on a song → <b>Share</b>.</li>
         <li>On a phone, pick Messages or any app; on a computer, the link is copied, so paste it anywhere.</li>
         <li>Whoever opens the link lands right on that song with a <b>▶ Play</b> button.</li>
-      </ul>`,
+      </ul>${data.downloads !== false ? `<h4>Download the MP3</h4><ul>
+        <li>Tap <b>⋯</b> on a song → <b>Download MP3</b>. It saves to your phone's or computer's Downloads (on iPhone: choose where in Files).</li>
+        <li>The file has the title, cover picture and lyrics inside, so it looks right in any music player.</li>
+      </ul>` : ''}`,
     },
     {
       id: 'pl-songs',
