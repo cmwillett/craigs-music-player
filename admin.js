@@ -293,23 +293,27 @@ function renderStats() {
   const tbody = $('#st-songs');
   tbody.replaceChildren();
   // Downloads per song (songs that were downloaded but never played still get a row).
+  // Downloads, shares and shared-link opens per song (songs with only those still get a row).
   const dl = new Map((s.downloads || []).map((r) => [r.song, r]));
+  const sh = new Map((s.shares || []).map((r) => [r.song, r]));
+  const op = new Map((s.opens || []).map((r) => [r.song, r]));
   const rowsIn = [...(s.songs || [])];
-  dl.forEach((r, song) => { if (!rowsIn.some((x) => x.song === song)) rowsIn.push({ song, plays: 0, plays30: 0, playsToday: 0, devices: 0, last: r.last }); });
+  [dl, sh, op].forEach((m) => m.forEach((r, song) => { if (!rowsIn.some((x) => x.song === song)) rowsIn.push({ song, plays: 0, plays30: 0, playsToday: 0, devices: 0, last: r.last }); }));
+  const lastOf = (r) => Math.max(r.last || 0, ...[dl, sh, op].map((m) => m.get(r.song)?.last || 0));
   const rows = rowsIn.sort((x, y) => (y.playsToday || 0) - (x.playsToday || 0) || y.plays - x.plays);
   const hasToday = rows.some((r) => 'playsToday' in r); // older helper code doesn't send it
   if (!rows.length) {
     const tr = document.createElement('tr');
-    tr.innerHTML = '<td colspan="7" style="color:var(--muted)">No plays yet.</td>';
+    tr.innerHTML = '<td colspan="9" style="color:var(--muted)">No plays yet.</td>';
     tbody.append(tr);
   }
   rows.forEach((r) => {
     const tr = document.createElement('tr');
-    const cells = [titles[r.song] || r.song, hasToday ? fmtN(r.playsToday) : '–', fmtN(r.plays30), fmtN(r.plays), fmtN(r.devices), fmtN(dl.get(r.song)?.downloads), r.last ? ago(Math.max(r.last, dl.get(r.song)?.last || 0)) : ''];
+    const cells = [titles[r.song] || r.song, hasToday ? fmtN(r.playsToday) : '–', fmtN(r.plays30), fmtN(r.plays), fmtN(r.devices), fmtN(dl.get(r.song)?.downloads), fmtN(sh.get(r.song)?.shares), fmtN(op.get(r.song)?.opens), lastOf(r) ? ago(lastOf(r)) : ''];
     cells.forEach((v, i) => {
       const td = document.createElement('td');
       td.textContent = v;
-      if (i >= 1 && i <= 5) td.className = 'num' + (i === 1 && r.playsToday ? ' hot' : '');
+      if (i >= 1 && i <= 7) td.className = 'num' + (i === 1 && r.playsToday ? ' hot' : '');
       tr.append(td);
     });
     tbody.append(tr);

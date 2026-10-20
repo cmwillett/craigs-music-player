@@ -40,6 +40,8 @@ export default {
     if (path === '/play') return recordPlay(req, env, originOk, reply, 'plays');
     if (path === '/view') return recordPlay(req, env, originOk, reply, 'views'); // lyric video opened (old)
     if (path === '/download') return recordPlay(req, env, originOk, reply, 'downloads'); // MP3 downloaded
+    if (path === '/share') return recordPlay(req, env, originOk, reply, 'shares');       // song shared
+    if (path === '/open') return recordPlay(req, env, originOk, reply, 'opens');         // a shared link was opened
     if (path === '/stats') return readStats(req, env, originOk, reply);
     if (path === '/subscribe') return subscribe(req, env, originOk, reply);
     if (path === '/unsubscribe') return unsubscribe(req, env, originOk, reply);
@@ -170,6 +172,8 @@ async function ensureTable(env) {
     env.DB.prepare('CREATE TABLE IF NOT EXISTS views (id INTEGER PRIMARY KEY, song TEXT NOT NULL, device TEXT NOT NULL, ts INTEGER NOT NULL)'),
     env.DB.prepare('CREATE INDEX IF NOT EXISTS views_ts ON views (ts)'),
     env.DB.prepare('CREATE TABLE IF NOT EXISTS downloads (id INTEGER PRIMARY KEY, song TEXT NOT NULL, device TEXT NOT NULL, ts INTEGER NOT NULL)'),
+    env.DB.prepare('CREATE TABLE IF NOT EXISTS shares (id INTEGER PRIMARY KEY, song TEXT NOT NULL, device TEXT NOT NULL, ts INTEGER NOT NULL)'),
+    env.DB.prepare('CREATE TABLE IF NOT EXISTS opens (id INTEGER PRIMARY KEY, song TEXT NOT NULL, device TEXT NOT NULL, ts INTEGER NOT NULL)'),
   ]);
   tableReady = true;
 }
@@ -227,7 +231,7 @@ async function readStats(req, env, originOk, reply) {
   const q = new URL(req.url).searchParams;
   const tz = Number(q.get('tz') || 0); // browser's UTC offset in minutes
   const today = Number(q.get('today') || 0) || now - day; // start of the admin's day (their time zone)
-  const [totals, songs, daily, downloads] = await env.DB.batch([
+  const [totals, songs, daily, downloads, shares, opens] = await env.DB.batch([
     env.DB.prepare(`SELECT COUNT(*) AS plays,
         COALESCE(SUM(ts > ?1), 0) AS plays7, COALESCE(SUM(ts > ?2), 0) AS plays30,
         COUNT(DISTINCT device) AS devices,
@@ -239,8 +243,10 @@ async function readStats(req, env, originOk, reply) {
     env.DB.prepare(`SELECT CAST((ts - ?2 * 60000) / 86400000 AS INTEGER) AS d, COUNT(*) AS plays
       FROM plays WHERE ts > ?1 GROUP BY d ORDER BY d`).bind(d30, tz),
     env.DB.prepare('SELECT song, COUNT(*) AS downloads, MAX(ts) AS last FROM downloads GROUP BY song'),
+    env.DB.prepare('SELECT song, COUNT(*) AS shares, MAX(ts) AS last FROM shares GROUP BY song'),
+    env.DB.prepare('SELECT song, COUNT(*) AS opens, MAX(ts) AS last FROM opens GROUP BY song'),
   ]);
-  return reply({ ok: true, now, totals: totals.results[0], songs: songs.results, downloads: downloads.results, daily: daily.results });
+  return reply({ ok: true, now, totals: totals.results[0], songs: songs.results, downloads: downloads.results, shares: shares.results, opens: opens.results, daily: daily.results });
 }
 
 // ======================================================================

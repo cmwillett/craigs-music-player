@@ -49,13 +49,13 @@ function toast(text, actionLabel, action, ms = 5000) {
 }
 
 async function shareSong(song) {
-  const url = `${appUrl()}?song=${encodeURIComponent(song.id)}`;
+  const url = `${appUrl()}?song=${encodeURIComponent(song.id)}&from=share`; // from=share: count when someone opens it
   const title = data.title || "Craig's Songs";
   if (navigator.share) {
-    try { await navigator.share({ title: song.title, text: `Listen to "${song.title}" on ${title}`, url }); } catch (_) { /* cancelled */ }
+    try { await navigator.share({ title: song.title, text: `Listen to "${song.title}" on ${title}`, url }); countPlay(song, 'share'); } catch (_) { /* cancelled */ }
     return;
   }
-  try { await navigator.clipboard.writeText(url); toast('Link copied. Paste it anywhere to share.'); }
+  try { await navigator.clipboard.writeText(url); countPlay(song, 'share'); toast('Link copied. Paste it anywhere to share.'); }
   catch { toast(url, null, null, 12000); }
 }
 
@@ -108,11 +108,14 @@ function openSharedSong() {
   const params = new URLSearchParams(location.search);
   const id = params.get('song');
   if (!id) return;
+  const fromShare = params.get('from') === 'share';
   params.delete('song');
+  params.delete('from');
   const rest = params.toString();
   history.replaceState(null, '', location.pathname + (rest ? `?${rest}` : '') + location.hash);
   const song = data.songs.find((s) => s.id === id);
   if (!song) { toast("That song isn't in the app anymore."); return; }
+  if (fromShare) countPlay(song, 'open'); // someone opened a link that was shared with them
   document.querySelector('.tab[data-view=songs]').click();
   view.filter = 'all'; search = ''; $('#search').value = ''; $('#search-clear').hidden = true;
   renderSongs();
@@ -180,7 +183,8 @@ function countPlay(song, kind = 'play') {
   const device = statsDevice();
   if (!device) return;
   // text/plain body = no CORS preflight; keepalive lets it finish even if the app is closed.
-  fetch(api.replace(/\/+$/, '') + (kind === 'download' ? '/download' : kind === 'view' ? '/view' : '/play'), { method: 'POST', body: JSON.stringify({ song: song.id, device }), keepalive: true }).catch(() => {});
+  const path = { download: '/download', view: '/view', share: '/share', open: '/open' }[kind] || '/play';
+  fetch(api.replace(/\/+$/, '') + path, { method: 'POST', body: JSON.stringify({ song: song.id, device }), keepalive: true }).catch(() => {});
 }
 
 // ---------- shuffle / repeat ----------
