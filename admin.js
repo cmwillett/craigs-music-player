@@ -282,6 +282,7 @@ function renderStats() {
 
   // By song
   const titles = Object.fromEntries((current?.songs || []).map((x) => [x.id, x.title]));
+  titles.app = '📱 The app itself (shared from the top)';
   const ago = (ms) => {
     const m = Math.round((s.now - ms) / 60000);
     if (m < 60) return `${Math.max(1, m)} min ago`;

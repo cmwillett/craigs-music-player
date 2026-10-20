@@ -59,6 +59,29 @@ async function shareSong(song) {
   catch { toast(url, null, null, 12000); }
 }
 
+// Share the app itself (the button at the top). Counted in Stats as "The app".
+const APP_STATS = { id: 'app' };
+async function shareApp() {
+  const url = `${appUrl()}?from=app`;
+  const title = data.title || "Craig's Songs";
+  const text = `Check out ${title}: songs Craig made. Install it on your phone for one-tap listening.`;
+  if (navigator.share) {
+    try { await navigator.share({ title, text, url }); countPlay(APP_STATS, 'share'); } catch (_) { /* cancelled */ }
+    return;
+  }
+  try { await navigator.clipboard.writeText(url); countPlay(APP_STATS, 'share'); toast('Link to the app copied. Paste it anywhere to share.'); }
+  catch { toast(url, null, null, 12000); }
+}
+$('#share-app').onclick = shareApp;
+function openedFromAppShare() {
+  const params = new URLSearchParams(location.search);
+  if (params.get('from') !== 'app') return;
+  params.delete('from');
+  const rest = params.toString();
+  history.replaceState(null, '', location.pathname + (rest ? `?${rest}` : '') + location.hash);
+  countPlay(APP_STATS, 'open');
+}
+
 // Opened from a shared link (?song=id): show that song with a Play button.
 // ---------- private songs ----------
 // A song marked private in Admin only shows on devices that entered the unlock code (or opened
@@ -852,6 +875,7 @@ async function boot() {
   renderPlaylists();
   paintUnlock();
   if (typeof CM !== 'undefined') CM.refreshButtons();
+  openedFromAppShare();
   openSharedSong();
   if (typeof HELP !== 'undefined') HELP.nudge();
   if (typeof SUB !== 'undefined') SUB.init();
