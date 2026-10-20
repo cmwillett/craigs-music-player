@@ -18,11 +18,11 @@
       "title": "The Right Craig",
       "file": "music/the-right-craig.mp3",
       "cover": "covers/the-right-craig.jpg",
-      "youtube": "https://www.youtube.com/watch?v=najPiqhKaEQ",
       "tags": [
         "family"
       ],
-      "description": "This is a song about my wife and I.  How we met, a little bit of our dating history, a gross true story of how she cleaned me up, how I proposed, and then brought kids into the world..."
+      "description": "This is a song about my wife and I.  How we met, a little bit of our dating history, a gross true story of how she cleaned me up, how I proposed, and then brought kids into the world...",
+      "private": true
     },
     {
       "id": "good-dog-titus",
