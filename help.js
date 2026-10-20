@@ -57,6 +57,7 @@ const HELP = (() => {
         <li><b>Category buttons</b> (like Family or Friends) show just those songs. <b>All songs</b> shows everything.</li>
         <li><b>Sort</b>: Newest, Oldest, Title A–Z, or By category.</li>
         <li>A small <b>gold dot</b> before a title means it was added in the last two weeks.</li>
+        ${data.unlock ? '<li>A <b>🔒</b> after a title means it\'s a private song you can see because you have the unlock code. Please don\'t pass it around.</li>' : ''}
         <li>Tap <b>⋯</b> on a song to read its description and see more options.</li>
       </ul>`,
     },

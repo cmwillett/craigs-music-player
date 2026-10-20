@@ -60,6 +60,50 @@ async function shareSong(song) {
 }
 
 // Opened from a shared link (?song=id): show that song with a Play button.
+// ---------- private songs ----------
+// A song marked private in Admin only shows on devices that entered the unlock code (or opened
+// Craig's unlock link: …/?code=XXXX). Only a scrambled version (hash) of the code is in songs.json.
+const UNLOCK = 'unlock-v1';
+async function hashCode(code) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode('songs-unlock:' + String(code).trim().toLowerCase()));
+  return [...new Uint8Array(buf)].map((b) => b.toString(16).padStart(2, '0')).join('');
+}
+let unlocked = false;
+async function applyPrivacy() {
+  const params = new URLSearchParams(location.search);
+  const code = params.get('code');
+  if (code !== null) {
+    params.delete('code');
+    const rest = params.toString();
+    history.replaceState(null, '', location.pathname + (rest ? `?${rest}` : '') + location.hash);
+    if (data.unlock && (await hashCode(code)) === data.unlock) {
+      try { localStorage.setItem(UNLOCK, data.unlock); } catch {}
+      setTimeout(() => toast('🔓 Unlocked! You can see the private songs on this device now.'), 600);
+    } else if (data.unlock) setTimeout(() => toast("That unlock link didn't work. Ask Craig for a new one."), 600);
+  }
+  let saved = null;
+  try { saved = localStorage.getItem(UNLOCK); } catch {}
+  unlocked = !!data.unlock && saved === data.unlock;
+  if (!unlocked) data.songs = data.songs.filter((s) => !s.private);
+}
+function paintUnlock() {
+  const row = $('#unlock-row');
+  row.hidden = !data.unlock;
+  $('#unlock-open').hidden = unlocked;
+  $('#unlock-done').hidden = !unlocked;
+  $('#unlock-form').hidden = true;
+  $('#unlock-msg').textContent = '';
+}
+$('#unlock-open').onclick = () => { $('#unlock-open').hidden = true; $('#unlock-form').hidden = false; $('#unlock-code').focus(); };
+$('#unlock-go').onclick = async () => {
+  const h = await hashCode($('#unlock-code').value);
+  if (h !== data.unlock) { $('#unlock-msg').textContent = "That code didn't work."; return; }
+  try { localStorage.setItem(UNLOCK, h); } catch {}
+  location.reload();
+};
+$('#unlock-code').addEventListener('keydown', (e) => { if (e.key === 'Enter') $('#unlock-go').click(); });
+$('#unlock-lock').onclick = () => { try { localStorage.removeItem(UNLOCK); } catch {} location.reload(); };
+
 function openSharedSong() {
   const params = new URLSearchParams(location.search);
   const id = params.get('song');
@@ -250,7 +294,8 @@ function songRow(song, list, src = null) {
   const text = el('div', { className: 'row-text' },
     el('div', { className: 'title' },
       isNew(song) ? el('span', { className: 'new-dot', title: 'New', 'aria-label': 'New' }) : null,
-      song.title),
+      song.title,
+      song.private ? el('span', { className: 'priv', title: 'Private: only people with the code see this', textContent: ' 🔒' }) : null),
     el('div', { className: 'now', hidden: true }),
     cats ? el('div', { className: 'meta row-cats', textContent: cats }) : null);
 
@@ -306,8 +351,8 @@ function openSongSheet(song, list = null, src = null) {
       LY.getLyrics(song).then((t) => { ly.innerHTML = '📝&nbsp; Lyrics'; if (t) ly.disabled = false; else ly.hidden = true; });
     }
   }
-  actions.append(btn(SHARE_ICON + '&nbsp; Share', '', () => shareSong(song)));
-  if (data.downloads !== false && song.file) actions.append(btn('⬇&nbsp; Download MP3', '', (e) => downloadSong(song, e.currentTarget)));
+  if (!song.private) actions.append(btn(SHARE_ICON + '&nbsp; Share', '', () => shareSong(song)));
+  if (data.downloads !== false && song.file && !song.private) actions.append(btn('⬇&nbsp; Download MP3', '', (e) => downloadSong(song, e.currentTarget)));
   if (typeof CM !== 'undefined' && data?.community?.api) {
     actions.append(btn('➕&nbsp; Add to playlist', '', () => { closeSongSheet(); CM.pickPlaylist([song.id]); }));
   }
@@ -793,6 +838,7 @@ async function boot() {
     const res = await fetch('songs.json', { cache: 'no-cache' });
     data = await res.json();
     if (typeof CM !== 'undefined') { CM.applyOverlay(data); await CM.ready; }
+    await applyPrivacy();
   } catch (e) {
     $('#song-list').replaceChildren(el('li', { className: 'empty', textContent: "Couldn't load the song list." }));
     return;
@@ -800,6 +846,7 @@ async function boot() {
   if (data.title) { document.title = data.title; $('#app-title').textContent = data.title; }
   renderSongs();
   renderPlaylists();
+  paintUnlock();
   if (typeof CM !== 'undefined') CM.refreshButtons();
   openSharedSong();
   if (typeof HELP !== 'undefined') HELP.nudge();

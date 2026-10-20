@@ -336,6 +336,11 @@ body.selecting .row .now { display: none; }
 .help-text p { margin: 8px 0; }
 .help-you { font-size: .7rem; font-weight: 700; background: var(--accent); color: var(--accent-ink); border-radius: 5px; padding: 1px 6px; margin-left: 4px; vertical-align: 1px; }
 .help-ok { color: #7ee787; font-weight: 600; }
+.unlock-row { margin-top: 16px; text-align: center; }
+.unlock-row[hidden], .unlock-row [hidden] { display: none !important; }
+.unlock-link { color: var(--muted); font-size: .85rem; text-decoration: underline; padding: 4px; }
+.unlock-done { color: var(--muted); font-size: .85rem; }
+.priv { font-size: .8em; }
 .help-version { color: var(--muted); font-size: .8rem; text-align: center; margin: 14px 0 0; }
 
 /* ---------- slim song rows ---------- */

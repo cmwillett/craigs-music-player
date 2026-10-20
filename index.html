@@ -198,6 +198,15 @@
       </div>
       <div class="cm-body">
         <div id="help-body"></div>
+        <div id="unlock-row" class="unlock-row" hidden>
+          <button id="unlock-open" class="unlock-link">🔑 Have an unlock code?</button>
+          <div id="unlock-form" class="pin-row" hidden>
+            <input id="unlock-code" class="cm-input" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Unlock code">
+            <button id="unlock-go">Unlock</button>
+          </div>
+          <div id="unlock-done" class="unlock-done" hidden>🔓 Private songs are unlocked on this device. <button id="unlock-lock" class="unlock-link">Lock again</button></div>
+          <div id="unlock-msg" class="cm-msg"></div>
+        </div>
         <p id="help-version" class="help-version"></p>
       </div>
     </div>

@@ -402,6 +402,9 @@ function render() {
   $('#sp-lists').value = (data.spotifyPlaylists || []).map((p) => `${p.name} | ${p.url}`).join('\n');
   $('#sp-client').value = data.spotify?.clientId || '';
   $('#dl-on').checked = data.downloads !== false;
+  const nPriv = data.songs.filter((s) => s.private).length;
+  $('#unlock-status').textContent = (data.unlock ? 'A code is set. (It\'s stored scrambled, so it can\'t be shown here; type a new one to change it.)' : 'No code set yet.')
+    + ` ${nPriv} private song${nPriv === 1 ? '' : 's'}.`;
   $('#cm-api').value = data.community?.api || '';
   renderPending();
 }
@@ -509,6 +512,7 @@ function renderEdit(data) {
         <label>Title</label><input class="e-title" type="text">
         <label>Short description</label><textarea class="e-desc" rows="2" maxlength="300"></textarea>
         <label>Lyrics (optional; leave empty to use the lyrics inside the MP3)</label><textarea class="e-lyrics" rows="4" placeholder="[Verse 1]&#10;…"></textarea>
+        <label class="check"><input class="e-private" type="checkbox"> Private: only people with the unlock code see it (set the code under Settings)</label>
         <label>Categories (comma separated)</label><input class="e-tags" type="text">
         <div class="tag-picks"></div>
         <label>Replace MP3 (optional)</label><input class="e-mp3" type="file" accept="audio/mpeg,.mp3">
@@ -520,7 +524,8 @@ function renderEdit(data) {
     q('details').dataset.id = song.id;
     if (open.has(song.id)) q('details').open = true;
     const pendingHere = ops.some((o) => o.id === song.id);
-    q('summary').textContent = song.title + (pendingHere ? '  · edited' : '');
+    q('summary').textContent = song.title + (song.private ? '  · 🔒 private' : '') + (pendingHere ? '  · edited' : '');
+    q('.e-private').checked = !!song.private;
     q('.e-title').value = song.title;
     q('.e-tags').value = (song.tags || []).join(', ');
     q('.e-desc').value = song.description || '';
@@ -533,9 +538,10 @@ function renderEdit(data) {
       const tags = tagsFrom(q('.e-tags').value);
       const description = q('.e-desc').value.trim();
       const lyrics = q('.e-lyrics').value.trim();
+      const isPrivate = q('.e-private').checked;
       const mp3 = q('.e-mp3').files[0], cover = q('.e-cover').files[0];
       const changed = title !== song.title ||
-        description !== (song.description || '') || lyrics !== (song.lyrics || '') || tags.join('|') !== (song.tags || []).join('|') || mp3 || cover;
+        description !== (song.description || '') || lyrics !== (song.lyrics || '') || isPrivate !== !!song.private || tags.join('|') !== (song.tags || []).join('|') || mp3 || cover;
       if (!changed) { q('details').open = false; return; }
       msg('Adding to your changes…');
       const mp3B64 = mp3 ? await fileB64(mp3) : null;
@@ -553,6 +559,7 @@ function renderEdit(data) {
           s.tags = tags;
           if (description) s.description = description; else delete s.description;
           if (lyrics) s.lyrics = lyrics; else delete s.lyrics;
+          if (isPrivate) s.private = true; else delete s.private;
           if (mp3B64) { s.file = s.file || `music/${id}.mp3`; ctx.files.set(s.file, mp3B64); }
           if (coverB64) {
             const path = `covers/${id}.${coverExt}`;
@@ -735,6 +742,22 @@ $('#sp-copy').onclick = async () => {
   try { await navigator.clipboard.writeText($('#sp-redirect').textContent); $('#sp-copy').textContent = 'Copied!'; }
   catch { $('#sp-copy').textContent = 'Select it and copy'; }
 };
+// Unlock code for private songs: only a scrambled version (hash) goes in songs.json. Same as the app's hashCode().
+async function hashUnlock(code) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode('songs-unlock:' + String(code).trim().toLowerCase()));
+  return [...new Uint8Array(buf)].map((b) => b.toString(16).padStart(2, '0')).join('');
+}
+$('#unlock-save').onclick = async () => {
+  const code = $('#unlock-code').value.trim();
+  if (code.length < 4) return say('#unlock-msg', 'Use at least 4 characters.', 'err');
+  const h = await hashUnlock(code);
+  queue('Set the unlock code for private songs', (d) => { d.unlock = h; });
+  const link = new URL('./?code=' + encodeURIComponent(code.toLowerCase()), location.href.replace(/admin\.html.*$/, '')).href;
+  $('#unlock-link').textContent = link;
+  $('#unlock-link-row').hidden = false;
+  say('#unlock-msg', 'Added to your changes. Tap Save all. Copy the link below now; it can\'t be shown again later.', 'ok');
+};
+
 $('#dl-on').onchange = (e) => {
   const on = e.target.checked;
   queue(on ? 'Turn on MP3 downloads' : 'Turn off MP3 downloads', (d) => { if (on) delete d.downloads; else d.downloads = false; });
