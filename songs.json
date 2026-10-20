@@ -18,11 +18,11 @@
       "title": "The Right Craig",
       "file": "music/the-right-craig.mp3",
       "cover": "covers/the-right-craig.jpg",
-      "youtube": "https://www.youtube.com/watch?v=najPiqhKaEQ",
       "tags": [
         "family"
       ],
-      "description": "This is a song about my wife and I.  How we met, a little bit of our dating history, a gross true story of how she cleaned me up, how I proposed, and then brought kids into the world..."
+      "description": "This is a song about my wife and I.  How we met, a little bit of our dating history, a gross true story of how she cleaned me up, how I proposed, and then brought kids into the world...",
+      "private": true
     },
     {
       "id": "good-dog-titus",
@@ -203,6 +203,22 @@
       "tags": [],
       "added": "2026-10-20",
       "description": "This song is about a neighbor of mine who throws legendary parties at his hidden party area!"
+    },
+    {
+      "id": "dougy-fresh-s-last-ride-irish-folk-version",
+      "title": "Dougy Fresh's Last Ride - Irish Folk Version",
+      "file": "music/dougy-fresh-s-last-ride-irish-folk-version.mp3",
+      "cover": "",
+      "tags": [],
+      "added": "2026-10-20"
+    },
+    {
+      "id": "dougy-fresh-s-last-ride-country-version",
+      "title": "Dougy Fresh's Last Ride - Country Version",
+      "file": "music/dougy-fresh-s-last-ride-country-version.mp3",
+      "cover": "",
+      "tags": [],
+      "added": "2026-10-20"
     }
   ],
   "playlists": [
@@ -302,5 +318,6 @@
   },
   "community": {
     "api": "https://craigs-songs-playlists.craig-willett.workers.dev"
-  }
+  },
+  "unlock": "ed00504e3e7efefb660847561743f0904db35030cf57c3e81ed91ec3f4132537"
 }
