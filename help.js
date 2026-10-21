@@ -78,9 +78,9 @@ const HELP = (() => {
       title: '🔔 Get new songs by email',
       show: () => !!(data.community && data.community.api),
       html: `<ul>
-        <li>Tap <b>🔔</b> at the top, type your email (and first name if you like), and tap <b>Subscribe</b>.</li>
+        <li>Tap <b>☰</b> at the top → <b>Get new songs by email</b>, type your email (and first name if you like), and tap <b>Subscribe</b>.</li>
         <li>When Craig adds a new song you get an email with a <b>Listen</b> link that opens it right in the app.</li>
-        <li>To stop: tap <b>🔔</b> → <b>Unsubscribe</b>, or use the unsubscribe link at the bottom of any email.</li>
+        <li>To stop: tap <b>☰</b> → <b>Get new songs by email</b> → <b>Unsubscribe</b>, or use the unsubscribe link at the bottom of any email.</li>
       </ul>`,
     },
     {
@@ -90,7 +90,7 @@ const HELP = (() => {
         <li>Tap <b>⋯</b> on a song → <b>Share</b>.</li>
         <li>On a phone, pick Messages or any app; on a computer, the link is copied, so paste it anywhere.</li>
         <li>Whoever opens the link lands right on that song with a <b>▶ Play</b> button.</li>
-        <li>To share the <b>whole app</b>, tap the share button at the top (the square with an arrow, next to <b>?</b>).</li>
+        <li>To share the <b>whole app</b>, tap <b>☰</b> at the top → <b>Share this app</b>.</li>
       </ul>${data.downloads !== false ? `<h4>Download the MP3</h4><ul>
         <li>Tap <b>⋯</b> on a song → <b>Download MP3</b>. It saves to your phone's or computer's Downloads (on iPhone: choose where in Files).</li>
         <li>The file has the title, cover picture and lyrics inside, so it looks right in any music player.</li>
@@ -155,7 +155,7 @@ const HELP = (() => {
     {
       id: 'make',
       title: '🎤 Make your own songs',
-      html: `<p>Curious how these songs are made, or want to make your own? Tap <b>Want to make your own songs?</b> at the bottom of the Songs list for a quick how-to.</p>${data.requestForm ? '<p>Want Craig to make one for you? Tap <b>Request a song from Craig</b> there too and fill out the quick form.</p>' : ''}`,
+      html: `<p>Curious how these songs are made, or want to make your own? Tap <b>🎤 Make your own songs</b> at the top of the Songs list (or in the <b>☰</b> menu) for a quick how-to.</p>${data.requestForm ? '<p>Want Craig to make one for you? Tap <b>🎁 Request a song from Craig</b> there and fill out the quick form.</p>' : ''}`,
     },
     {
       id: 'help',
@@ -198,12 +198,12 @@ const HELP = (() => {
   const openMake = () => { $('#make-modal').hidden = false; document.body.classList.add('modal-open'); };
   const closeMake = () => { $('#make-modal').hidden = true; document.body.classList.remove('modal-open'); };
   $('#make-open').onclick = openMake;
+  $('#make-open-top').onclick = openMake;
   // "Request a song" Google Form link (set in Admin → Settings)
   function paintRequest() {
     const url = data.requestForm || '';
-    $('#request-song').hidden = !url;
-    $('#make-request').hidden = !url;
-    if (url) { $('#request-song').href = url; $('#make-request-link').href = url; }
+    ['#request-song', '#request-song-top', '#make-request'].forEach((sel) => { $(sel).hidden = !url; });
+    if (url) ['#request-song', '#request-song-top', '#make-request-link'].forEach((sel) => { $(sel).href = url; });
   }
   $('#make-close').onclick = closeMake;
   $('#make-modal').addEventListener('click', (e) => { if (e.target.id === 'make-modal') closeMake(); });
@@ -220,7 +220,7 @@ const HELP = (() => {
     try { seen = !!localStorage.getItem(SEEN); } catch {}
     if (seen || new URLSearchParams(location.search).has('song')) return;
     try { localStorage.setItem(SEEN, '1'); } catch {}
-    setTimeout(() => toast('New here? Tap ? at the top for a quick how-to.', 'Show me', () => open(), 9000), 1200);
+    setTimeout(() => toast('New here? Tap ☰ at the top → How to use.', 'Show me', () => open(), 9000), 1200);
   }
 
   return { open, nudge, paintRequest };

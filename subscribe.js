@@ -1,4 +1,4 @@
-// "Get new songs by email": the 🔔 button at the top.
+// "Get new songs by email": ☰ menu → Get new songs by email.
 // The address goes to the Cloudflare helper (not GitHub, which is public). Craig's desktop
 // publisher emails everyone when a new song is published (not for songs named "Trial …").
 // Loaded after app.js, so it can use $, data.
@@ -12,6 +12,7 @@ const SUB = (() => {
   function paint() {
     const m = mine();
     $('#sub-btn').classList.toggle('on', !!m);
+    $('#sub-btn .sub-lbl').textContent = m ? 'Getting new songs by email' : 'Get new songs by email';
     document.querySelector('.top').classList.toggle('subbed', !!m);
     $('#sub-btn').title = m ? "You're getting new songs by email" : 'Get new songs by email';
     $('#sub-form').hidden = !!m;

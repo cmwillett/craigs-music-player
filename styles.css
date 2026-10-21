@@ -299,41 +299,42 @@ body.selecting .row .now { display: none; }
 .pl-head { margin: 4px 0 8px; }
 .pl-head .sub-hint { margin: 0; }
 
-/* top-right buttons: Subscribe, share the app, ?, Admin. They float right and the title wraps beside them. */
-.corner { float: right; display: flex; gap: 8px; margin: 2px 0 6px 10px; position: relative; z-index: 1; }
+/* top-right: menu (☰) and Admin. They float right and the title wraps beside them. */
+.corner { float: right; display: flex; gap: 8px; margin: 2px 0 6px 10px; position: relative; z-index: 6; }
 .corner .corner-link { position: static; }
 .top h1, .top.has-sub h1, .top.has-sub.subbed h1 { padding-right: 0; }
 .top .tabs { clear: both; }
 .help-btn { width: 36px; justify-content: center; padding: 7px 0; font-size: 1rem; font-weight: 800; color: var(--text); }
-.share-app svg { display: block; }
-.sub-btn[hidden] { display: none; }
-.sub-btn { font-size: .95rem; width: auto !important; padding: 7px 12px !important; gap: 5px; }
-.sub-btn .sub-lbl { font-size: .85rem; font-weight: 700; color: var(--accent); }
-.sub-btn.on { padding: 7px 0 !important; width: 36px !important; }
-.sub-btn.on .sub-lbl { display: none; }   /* already subscribed: just the bell */
-.sub-btn.on { box-shadow: inset 0 0 0 2px var(--accent); }
+.menu-wrap { position: relative; }
+.menu-btn { position: relative; }
+.menu-btn[aria-expanded="true"] { background: var(--card-2); }
+.menu-dot { position: absolute; top: 5px; right: 5px; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); }
+.menu-dot[hidden] { display: none; }
+.menu { position: absolute; right: 0; top: calc(100% + 6px); min-width: 270px; background: var(--card-2); border-radius: 14px; padding: 6px;
+  box-shadow: 0 12px 32px rgba(0,0,0,.5); display: flex; flex-direction: column; }
+.menu[hidden], .menu [hidden] { display: none !important; }
+.menu-item { display: flex; align-items: center; gap: 12px; width: 100%; padding: 12px; border-radius: 10px; text-align: left;
+  color: var(--text); font-weight: 600; font-size: .95rem; text-decoration: none; background: none; }
+.menu-item:hover, .menu-item:focus-visible { background: rgba(255,255,255,.07); }
+.menu-item .mi { width: 22px; text-align: center; }
+#sub-btn.on .sub-lbl::after { content: ' ✓'; color: var(--accent); }
 .sub-text { margin: 4px 0 6px; line-height: 1.5; }
+.promo-row { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 10px; }
+.promo-row [hidden] { display: none; }
+.promo { padding: 8px 14px; border-radius: 999px; background: var(--card); color: var(--accent); font-weight: 700; font-size: .88rem; text-decoration: none; }
+.promo.req { background: var(--accent); color: var(--accent-ink); }
 @media (max-width: 420px) {
-  .corner { gap: 6px; }
-  .top h1 { font-size: 1.35rem; }
-  .corner .corner-link span { display: none; }   /* Admin shows as just the gear on phones */
+  .top h1 { font-size: 1.45rem; }
+  .corner .corner-link span:not(.menu-dot) { display: none; }   /* Admin shows as just the gear on phones */
   .corner .corner-link { padding: 7px 9px; }
-  .help-btn { width: 34px; }
-}
-@media (max-width: 370px) {
-  .sub-btn .sub-lbl { display: none; }           /* very narrow phones: just the bell */
-  .sub-btn { padding: 7px 0 !important; width: 34px !important; }
+  .promo { font-size: .85rem; padding: 7px 12px; }
+  .promo .wide { display: none; }
 }
 
 /* how-to guide */
 .help-box { max-width: 600px; }
 .make-link { display: block; margin: 18px auto 4px; padding: 10px 16px; border-radius: 999px; background: var(--card); color: var(--accent); font-weight: 700; font-size: .92rem; }
 .make-link:hover { background: var(--card-2); }
-.make-row { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin: 18px 0 4px; }
-.make-row .make-link { margin: 0; text-decoration: none; }
-.make-row [hidden] { display: none; }
-.req-link { background: var(--accent); color: var(--accent-ink); }
-.req-link:hover { background: var(--accent); filter: brightness(1.06); }
 .make-req { background: var(--card-2); border-radius: 12px; padding: 12px 14px; margin: 4px 0 14px; line-height: 1.5; }
 .make-req[hidden] { display: none; }
 .make-req-btn { display: table; margin-top: 10px; padding: 9px 16px; border-radius: 999px; background: var(--accent); color: var(--accent-ink) !important; font-weight: 700; text-decoration: none; }

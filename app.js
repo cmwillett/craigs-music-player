@@ -930,6 +930,16 @@ if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
 }
 
+// ---------- ☰ menu (Subscribe, Request a song, Make your own, Share, How to use) ----------
+(() => {
+  const btn = $('#menu-btn'), menu = $('#menu');
+  const setOpen = (on) => { menu.hidden = !on; btn.setAttribute('aria-expanded', String(on)); };
+  btn.addEventListener('click', (e) => { e.stopPropagation(); setOpen(menu.hidden); });
+  menu.addEventListener('click', (e) => { if (e.target.closest('.menu-item')) setOpen(false); }); // pick an item -> close
+  document.addEventListener('click', (e) => { if (!menu.hidden && !e.target.closest('.menu-wrap')) setOpen(false); });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !menu.hidden) { setOpen(false); btn.focus(); } });
+})();
+
 // ---------- Admin on top of the app (music keeps playing) ----------
 (() => {
   const view = $('#admin-view'), frame = $('#admin-frame');
