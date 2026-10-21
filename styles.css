@@ -329,6 +329,14 @@ body.selecting .row .now { display: none; }
 .help-box { max-width: 600px; }
 .make-link { display: block; margin: 18px auto 4px; padding: 10px 16px; border-radius: 999px; background: var(--card); color: var(--accent); font-weight: 700; font-size: .92rem; }
 .make-link:hover { background: var(--card-2); }
+.make-row { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin: 18px 0 4px; }
+.make-row .make-link { margin: 0; text-decoration: none; }
+.make-row [hidden] { display: none; }
+.req-link { background: var(--accent); color: var(--accent-ink); }
+.req-link:hover { background: var(--accent); filter: brightness(1.06); }
+.make-req { background: var(--card-2); border-radius: 12px; padding: 12px 14px; margin: 4px 0 14px; line-height: 1.5; }
+.make-req[hidden] { display: none; }
+.make-req-btn { display: table; margin-top: 10px; padding: 9px 16px; border-radius: 999px; background: var(--accent); color: var(--accent-ink) !important; font-weight: 700; text-decoration: none; }
 #make-modal a { color: var(--accent); }
 .make-small { color: var(--muted); font-size: .8rem; margin-top: 4px; }
 .help-sec { border-bottom: 1px solid #2c303b; }

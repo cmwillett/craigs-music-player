@@ -155,7 +155,7 @@ const HELP = (() => {
     {
       id: 'make',
       title: '🎤 Make your own songs',
-      html: `<p>Curious how these songs are made, or want to make your own? Tap <b>Want to make your own songs?</b> at the bottom of the Songs list for a quick how-to.</p>`,
+      html: `<p>Curious how these songs are made, or want to make your own? Tap <b>Want to make your own songs?</b> at the bottom of the Songs list for a quick how-to.</p>${data.requestForm ? '<p>Want Craig to make one for you? Tap <b>Request a song from Craig</b> there too and fill out the quick form.</p>' : ''}`,
     },
     {
       id: 'help',
@@ -198,6 +198,13 @@ const HELP = (() => {
   const openMake = () => { $('#make-modal').hidden = false; document.body.classList.add('modal-open'); };
   const closeMake = () => { $('#make-modal').hidden = true; document.body.classList.remove('modal-open'); };
   $('#make-open').onclick = openMake;
+  // "Request a song" Google Form link (set in Admin → Settings)
+  function paintRequest() {
+    const url = data.requestForm || '';
+    $('#request-song').hidden = !url;
+    $('#make-request').hidden = !url;
+    if (url) { $('#request-song').href = url; $('#make-request-link').href = url; }
+  }
   $('#make-close').onclick = closeMake;
   $('#make-modal').addEventListener('click', (e) => { if (e.target.id === 'make-modal') closeMake(); });
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !$('#make-modal').hidden) closeMake(); });
@@ -216,5 +223,5 @@ const HELP = (() => {
     setTimeout(() => toast('New here? Tap ? at the top for a quick how-to.', 'Show me', () => open(), 9000), 1200);
   }
 
-  return { open, nudge };
+  return { open, nudge, paintRequest };
 })();

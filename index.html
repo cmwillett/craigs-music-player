@@ -68,7 +68,10 @@
         <span id="count" class="count"></span>
       </div>
       <div id="song-list"></div>
-      <button id="make-open" class="make-link">🎤 Want to make your own songs?</button>
+      <div class="make-row">
+        <a id="request-song" class="make-link req-link" target="_blank" rel="noopener" hidden>🎁 Request a song from Craig</a>
+        <button id="make-open" class="make-link">🎤 Want to make your own songs?</button>
+      </div>
     </section>
 
     <section id="view-playlists" class="view" hidden>
@@ -246,6 +249,10 @@
         <button id="make-close" class="modal-x" aria-label="Close">✕</button>
       </div>
       <div class="cm-body help-text">
+        <div id="make-request" class="make-req" hidden>
+          <b>Rather have Craig make one for you?</b> Fill out a quick form with who it's for and some fun details.
+          <a id="make-request-link" class="make-req-btn" target="_blank" rel="noopener">🎁 Request a song</a>
+        </div>
         <p>Every song in this app was made with an AI music app. You write (or describe) the words, pick a style, and it sings it for you, with music, vocals and all, in about a minute. Anyone can do it, and you can start free.</p>
 
         <h4>1. Pick an app</h4>

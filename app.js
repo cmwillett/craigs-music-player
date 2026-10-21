@@ -877,7 +877,7 @@ async function boot() {
   if (typeof CM !== 'undefined') CM.refreshButtons();
   openedFromAppShare();
   openSharedSong();
-  if (typeof HELP !== 'undefined') HELP.nudge();
+  if (typeof HELP !== 'undefined') { HELP.nudge(); HELP.paintRequest(); }
   if (typeof SUB !== 'undefined') SUB.init();
   if (typeof SP !== 'undefined') SP.init(data);
 }

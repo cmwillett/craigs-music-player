@@ -437,6 +437,7 @@ function render() {
   $('#sp-lists').value = (data.spotifyPlaylists || []).map((p) => `${p.name} | ${p.url}`).join('\n');
   $('#sp-client').value = data.spotify?.clientId || '';
   $('#dl-on').checked = data.downloads !== false;
+  $('#req-url').value = data.requestForm || '';
   const nPriv = data.songs.filter((s) => s.private).length;
   $('#unlock-status').textContent = (data.unlock ? 'A code is set. (It\'s stored scrambled, so it can\'t be shown here; type a new one to change it.)' : 'No code set yet.')
     + ` ${nPriv} private song${nPriv === 1 ? '' : 's'}.`;
@@ -791,6 +792,13 @@ $('#unlock-save').onclick = async () => {
   $('#unlock-link').textContent = link;
   $('#unlock-link-row').hidden = false;
   say('#unlock-msg', 'Added to your changes. Tap Save all. Copy the link below now; it can\'t be shown again later.', 'ok');
+};
+
+$('#req-save').onclick = () => {
+  const url = $('#req-url').value.trim();
+  if (url && !/^https:\/\/(forms\.gle|docs\.google\.com\/forms)\//.test(url)) return say('#req-msg', "That doesn't look like a Google Form link (it should start with https://forms.gle/ or https://docs.google.com/forms/).", 'err');
+  queue(url ? 'Set the song request form' : 'Remove the song request form', (d) => { if (url) d.requestForm = url; else delete d.requestForm; });
+  say('#req-msg', 'Added to your changes. Tap Save all.', 'ok');
 };
 
 $('#dl-on').onchange = (e) => {
