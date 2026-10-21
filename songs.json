@@ -95,11 +95,11 @@
       "title": "I Thought You Should Know",
       "file": "music/i-thought-you-should-know.mp3",
       "cover": "covers/i-thought-you-should-know.jpeg",
-      "youtube": "https://www.youtube.com/watch?v=-omXmLR4YhA",
       "tags": [
         "family"
       ],
-      "description": "This is a song I wrote for my kids, Katie and Caleb.  Just to let them know how proud I am of them..."
+      "description": "This is a song I wrote for my kids, Katie and Caleb.  Just to let them know how proud I am of them...",
+      "private": true
     },
     {
       "id": "streamwood-all-night-country-version",
