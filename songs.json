@@ -330,5 +330,6 @@
   "community": {
     "api": "https://craigs-songs-playlists.craig-willett.workers.dev"
   },
-  "unlock": "ed00504e3e7efefb660847561743f0904db35030cf57c3e81ed91ec3f4132537"
+  "unlock": "ed00504e3e7efefb660847561743f0904db35030cf57c3e81ed91ec3f4132537",
+  "requestForm": "https://docs.google.com/forms/d/e/1FAIpQLSclNc8fPWsyEoewWt1YH6ulnrOs_XyUjPexXM5RwVsDqPfWDg/viewform?usp=publish-editor"
 }
