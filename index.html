@@ -68,6 +68,7 @@
         <span id="count" class="count"></span>
       </div>
       <div id="song-list"></div>
+      <button id="make-open" class="make-link">🎤 Want to make your own songs?</button>
     </section>
 
     <section id="view-playlists" class="view" hidden>
@@ -234,6 +235,44 @@
           <div id="sub-msg2" class="cm-msg"></div>
           <div class="cm-btns"><button id="sub-stop" class="cm-del">Unsubscribe</button><button id="sub-ok" class="cm-save">OK</button></div>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="make-modal" class="modal" hidden role="dialog" aria-modal="true" aria-labelledby="make-title">
+    <div class="modal-box cm-box help-box">
+      <div class="modal-head">
+        <div id="make-title" class="modal-title">🎤 Make your own songs</div>
+        <button id="make-close" class="modal-x" aria-label="Close">✕</button>
+      </div>
+      <div class="cm-body help-text">
+        <p>Every song in this app was made with an AI music app. You write (or describe) the words, pick a style, and it sings it for you, with music, vocals and all, in about a minute. Anyone can do it, and you can start free.</p>
+
+        <h4>1. Pick an app</h4>
+        <ul>
+          <li><b><a href="https://suno.com" target="_blank" rel="noopener">Suno</a></b> (what Craig uses). Free plan: 50 credits a day, enough for several songs a day, for personal use. Pro is about $8 a month for lots more songs, downloads and permission to use them commercially.</li>
+          <li><b><a href="https://www.udio.com" target="_blank" rel="noopener">Udio</a></b>. Similar idea, with a free plan to try it.</li>
+          <li><b><a href="https://elevenlabs.io/music" target="_blank" rel="noopener">ElevenLabs Music</a></b>. Paid plans from about $5 a month.</li>
+        </ul>
+        <p class="make-small">Prices as of October 2026; they change, so check the app's own pricing page.</p>
+
+        <h4>2. Write the words</h4>
+        <ul>
+          <li>Write them yourself, or ask an AI chat app (like Claude or ChatGPT) for help: <i>"Write a funny country song about my brother-in-law who always burns the burgers. Include his name, his dog Max, and the time he fell in the pool."</i></li>
+          <li>The more real details (names, nicknames, inside jokes, places), the better the song.</li>
+          <li>Label the parts in brackets: <b>[Verse 1]</b>, <b>[Chorus]</b>, <b>[Bridge]</b>, <b>[Outro]</b>. The app follows them.</li>
+        </ul>
+
+        <h4>3. Make it (Suno)</h4>
+        <ol>
+          <li>Tap <b>Create</b> and switch to <b>Custom</b> mode.</li>
+          <li>Paste your words into <b>Lyrics</b>.</li>
+          <li>In <b>Style</b>, describe the sound: <i>"upbeat 90s country, male vocals, fiddle, fun"</i> or <i>"pop punk, female vocals, fast"</i>.</li>
+          <li>Give it a title and tap <b>Create</b>. You get two versions; keep your favorite or try again.</li>
+        </ol>
+
+        <h4>4. Share it</h4>
+        <p>Every app has a share link you can text to people. Made one you'd like in <b>this</b> app? Send Craig the link.</p>
       </div>
     </div>
   </div>

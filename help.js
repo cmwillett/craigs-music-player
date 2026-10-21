@@ -153,6 +153,11 @@ const HELP = (() => {
         <p>These play in a Spotify player inside the app. Without Spotify Premium (or on many iPhones) Spotify only allows <b>30-second previews</b>${has.spotify() ? '; connecting Spotify above gets you full songs' : ''}.</p>` : ''),
     },
     {
+      id: 'make',
+      title: '🎤 Make your own songs',
+      html: `<p>Curious how these songs are made, or want to make your own? Tap <b>Want to make your own songs?</b> at the bottom of the Songs list for a quick how-to.</p>`,
+    },
+    {
       id: 'help',
       title: '🛠️ Something not working?',
       html: `<ul>
@@ -188,6 +193,14 @@ const HELP = (() => {
     $('#help-modal').hidden = true;
     document.body.classList.remove('modal-open');
   }
+
+  // "Want to make your own songs?" guide (link under the song list)
+  const openMake = () => { $('#make-modal').hidden = false; document.body.classList.add('modal-open'); };
+  const closeMake = () => { $('#make-modal').hidden = true; document.body.classList.remove('modal-open'); };
+  $('#make-open').onclick = openMake;
+  $('#make-close').onclick = closeMake;
+  $('#make-modal').addEventListener('click', (e) => { if (e.target.id === 'make-modal') closeMake(); });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !$('#make-modal').hidden) closeMake(); });
 
   $('#help-btn').onclick = () => open();
   $('#help-close').onclick = close;

@@ -327,6 +327,10 @@ body.selecting .row .now { display: none; }
 
 /* how-to guide */
 .help-box { max-width: 600px; }
+.make-link { display: block; margin: 18px auto 4px; padding: 10px 16px; border-radius: 999px; background: var(--card); color: var(--accent); font-weight: 700; font-size: .92rem; }
+.make-link:hover { background: var(--card-2); }
+#make-modal a { color: var(--accent); }
+.make-small { color: var(--muted); font-size: .8rem; margin-top: 4px; }
 .help-sec { border-bottom: 1px solid #2c303b; }
 .help-sec summary { cursor: pointer; padding: 14px 4px; font-weight: 700; list-style: none; display: flex; justify-content: space-between; }
 .help-sec summary::-webkit-details-marker { display: none; }
