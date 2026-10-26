@@ -219,6 +219,31 @@
       "cover": "",
       "tags": [],
       "added": "2026-10-20"
+    },
+    {
+      "id": "trial-the-freeze-out",
+      "title": "Trial The Freeze Out",
+      "file": "music/trial-the-freeze-out.mp3",
+      "cover": "",
+      "tags": [],
+      "added": "2026-10-22"
+    },
+    {
+      "id": "spider",
+      "title": "Spider",
+      "file": "music/spider.mp3",
+      "cover": "covers/spider.jpg",
+      "tags": [],
+      "added": "2026-10-23",
+      "description": "This one goes out to my longtime friend Rick \"Spider\" Webb!  Rick, I still plan to buy that dartboard..."
+    },
+    {
+      "id": "huzzah",
+      "title": "Huzzah!",
+      "file": "music/huzzah.mp3",
+      "cover": "",
+      "tags": [],
+      "added": "2026-10-24"
     }
   ],
   "playlists": [
