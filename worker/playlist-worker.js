@@ -231,7 +231,7 @@ async function readStats(req, env, originOk, reply) {
   const q = new URL(req.url).searchParams;
   const tz = Number(q.get('tz') || 0); // browser's UTC offset in minutes
   const today = Number(q.get('today') || 0) || now - day; // start of the admin's day (their time zone)
-  const [totals, songs, daily, downloads, shares, opens] = await env.DB.batch([
+  const [totals, songs, daily, downloads, shares, opens, newListeners] = await env.DB.batch([
     env.DB.prepare(`SELECT COUNT(*) AS plays,
         COALESCE(SUM(ts > ?1), 0) AS plays7, COALESCE(SUM(ts > ?2), 0) AS plays30,
         COUNT(DISTINCT device) AS devices,
@@ -245,8 +245,11 @@ async function readStats(req, env, originOk, reply) {
     env.DB.prepare('SELECT song, COUNT(*) AS downloads, MAX(ts) AS last FROM downloads GROUP BY song'),
     env.DB.prepare('SELECT song, COUNT(*) AS shares, MAX(ts) AS last FROM shares GROUP BY song'),
     env.DB.prepare('SELECT song, COUNT(*) AS opens, MAX(ts) AS last FROM opens GROUP BY song'),
+    // Listeners whose first-ever play of a song was today (so the admin can see the Listeners number went up).
+    env.DB.prepare(`SELECT song, COUNT(*) AS n FROM (SELECT song, device, MIN(ts) AS first FROM plays GROUP BY song, device)
+      WHERE first >= ?1 GROUP BY song`).bind(today),
   ]);
-  return reply({ ok: true, now, totals: totals.results[0], songs: songs.results, downloads: downloads.results, shares: shares.results, opens: opens.results, daily: daily.results });
+  return reply({ ok: true, now, totals: totals.results[0], songs: songs.results, downloads: downloads.results, shares: shares.results, opens: opens.results, newListeners: newListeners.results, daily: daily.results });
 }
 
 // ======================================================================

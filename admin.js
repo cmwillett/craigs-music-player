@@ -323,13 +323,22 @@ function renderStats() {
     tr.innerHTML = '<td colspan="9" style="color:var(--muted)">No plays yet.</td>';
     tbody.append(tr);
   }
+  // Numbers that went up today are gold (columns: 1 Today, 2 Plays 30d, 3 All time, 4 Listeners, 5 Downloads, 6 Shared, 7 Link opens).
+  const dayStart = new Date().setHours(0, 0, 0, 0);
+  const newL = new Map((s.newListeners || []).map((x) => [x.song, x.n]));
+  const since = (m) => (r) => (m.get(r.song)?.last || 0) >= dayStart;
+  const playedToday = (r) => (r.playsToday || 0) > 0;
+  const changedToday = { 1: playedToday, 2: playedToday, 3: playedToday, 4: (r) => (newL.get(r.song) || 0) > 0, 5: since(dl), 6: since(sh), 7: since(op) };
   rows.forEach(({ r, v }) => {
     const tr = document.createElement('tr');
     const cells = [v[0], hasToday ? fmtN(v[1]) : '–', fmtN(v[2]), fmtN(v[3]), fmtN(v[4]), fmtN(v[5]), fmtN(v[6]), fmtN(v[7]), v[8] ? ago(v[8]) : ''];
     cells.forEach((text, i) => {
       const td = document.createElement('td');
       td.textContent = text;
-      if (i >= 1 && i <= 7) td.className = 'num' + (i === 1 && r.playsToday ? ' hot' : '');
+      if (i >= 1 && i <= 7) {
+        td.className = 'num';
+        if (changedToday[i]?.(r)) { td.classList.add('hot'); td.title = 'Went up today'; }
+      }
       tr.append(td);
     });
     tbody.append(tr);
