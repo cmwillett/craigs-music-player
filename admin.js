@@ -283,6 +283,10 @@ function renderStats() {
   // By song
   const titles = Object.fromEntries((current?.songs || []).map((x) => [x.id, x.title]));
   titles.app = '📱 The app itself (shared from the top)';
+  (current?.playlists || []).forEach((p) => {
+    const k = 'pl-' + String(p.id || p.name).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 100);
+    titles[k] = `📃 Playlist: ${p.name}`;
+  });
   const ago = (ms) => {
     const m = Math.round((s.now - ms) / 60000);
     if (m < 60) return `${Math.max(1, m)} min ago`;

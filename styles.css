@@ -319,6 +319,7 @@ body.selecting .row .now { display: none; }
 .menu-item .mi { width: 22px; text-align: center; }
 #sub-btn.on .sub-lbl::after { content: ' ✓'; color: var(--accent); }
 .sub-text { margin: 4px 0 6px; line-height: 1.5; }
+.pl-share svg { vertical-align: -2px; }
 .promo-row { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 10px; }
 .promo-row [hidden] { display: none; }
 .promo { padding: 8px 14px; border-radius: 999px; background: var(--card); color: var(--accent); font-weight: 700; font-size: .88rem; text-decoration: none; }

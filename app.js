@@ -534,6 +534,37 @@ document.querySelectorAll('.subtab').forEach((b) => {
   };
 });
 
+// ---------- share a playlist ----------
+// Link: …/?playlist=<id or name>&from=share. Counted in Stats as "pl-<name>" (shown as "📃 Playlist: …").
+const plStatsId = (p) => ({ id: 'pl-' + String(plKey(p)).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 100) });
+async function sharePlaylist(p) {
+  const url = `${appUrl()}?playlist=${encodeURIComponent(plKey(p))}&from=share`;
+  const n = resolvePlaylist(p).length;
+  const text = `Listen to my "${p.name}" playlist (${n} song${n === 1 ? '' : 's'}) on ${data.title || "Craig's Songs"}`;
+  if (navigator.share) {
+    try { await navigator.share({ title: p.name, text, url }); countPlay(plStatsId(p), 'share'); } catch (_) { /* cancelled */ }
+    return;
+  }
+  try { await navigator.clipboard.writeText(url); countPlay(plStatsId(p), 'share'); toast('Link to this playlist copied. Paste it anywhere to share.'); }
+  catch { toast(url, null, null, 12000); }
+}
+function openSharedPlaylist() {
+  const params = new URLSearchParams(location.search);
+  const key = params.get('playlist');
+  if (!key) return;
+  const fromShare = params.get('from') === 'share';
+  params.delete('playlist'); params.delete('from');
+  const rest = params.toString();
+  history.replaceState(null, '', location.pathname + (rest ? `?${rest}` : '') + location.hash);
+  const p = (data.playlists || []).find((x) => plKey(x) === key && !x.hidden);
+  if (!p) { toast("That playlist isn't in the app anymore."); return; }
+  if (fromShare) countPlay(plStatsId(p), 'open');
+  document.querySelector('.tab[data-view=playlists]').click();
+  document.querySelector('.subtab[data-sub=mine]')?.click();
+  showPlaylist(key);
+  toast(`🎶 ${p.name}: tap ▶ Play to listen.`);
+}
+
 function showPlaylist(key) {
   openPlaylist = key;
   renderPlaylistDetail();
@@ -551,6 +582,7 @@ function renderPlaylistDetail() {
   $('#pl-count').textContent = `${songs.length} song${songs.length === 1 ? '' : 's'}`;
   $('#pl-play').onclick = () => playList(songs, 0, plKey(p));
   $('#pl-shuffle').onclick = () => playList(shuffle(songs), 0, plKey(p));
+  $('#pl-share').onclick = () => sharePlaylist(p);
   const ul = $('#pl-songs');
   ul.replaceChildren();
   if (!songs.length) ul.append(el('li', { className: 'empty', textContent: 'This playlist is empty.' }));
@@ -876,6 +908,7 @@ async function boot() {
   paintUnlock();
   if (typeof CM !== 'undefined') CM.refreshButtons();
   openedFromAppShare();
+  openSharedPlaylist();
   openSharedSong();
   if (typeof HELP !== 'undefined') { HELP.nudge(); HELP.paintRequest(); }
   if (typeof SUB !== 'undefined') SUB.init();
