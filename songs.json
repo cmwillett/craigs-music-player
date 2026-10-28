@@ -149,10 +149,9 @@
     },
     {
       "id": "nightmare-on-simca-lane",
-      "title": "Nightmare on Simca Lane",
+      "title": "Nightmare on Simca Lane - Original",
       "file": "music/nightmare-on-simca-lane.mp3",
       "cover": "",
-      "youtube": "",
       "tags": [
         "halloween"
       ],
@@ -244,6 +243,38 @@
       "cover": "",
       "tags": [],
       "added": "2026-10-24"
+    },
+    {
+      "id": "nightmare-on-simca-lane-60s-spooky-surf-rock",
+      "title": "Nightmare on Simca Lane - 60s Spooky Surf Rock",
+      "file": "music/nightmare-on-simca-lane-60s-spooky-surf-rock.mp3",
+      "cover": "",
+      "tags": [],
+      "added": "2026-10-28"
+    },
+    {
+      "id": "nightmare-on-simca-lane-80s-synth",
+      "title": "Nightmare on Simca Lane - 80s Synth",
+      "file": "music/nightmare-on-simca-lane-80s-synth.mp3",
+      "cover": "",
+      "tags": [],
+      "added": "2026-10-28"
+    },
+    {
+      "id": "nightmare-on-simca-lane-dark-cinematic-pop",
+      "title": "Nightmare on Simca Lane - Dark Cinematic Pop",
+      "file": "music/nightmare-on-simca-lane-dark-cinematic-pop.mp3",
+      "cover": "",
+      "tags": [],
+      "added": "2026-10-28"
+    },
+    {
+      "id": "nightmare-on-simca-lane-dark-gothic-country",
+      "title": "Nightmare on Simca Lane - Dark Gothic Country",
+      "file": "music/nightmare-on-simca-lane-dark-gothic-country.mp3",
+      "cover": "",
+      "tags": [],
+      "added": "2026-10-28"
     }
   ],
   "playlists": [
@@ -336,6 +367,22 @@
       ],
       "by": "Craig",
       "updated": "2026-10-05T15:31:03.735Z"
+    },
+    {
+      "id": "halloween-10ac25",
+      "user": true,
+      "owner": "5fab77805860e5feec59ed3c009fd8ee",
+      "created": "2026-10-28",
+      "name": "Halloween",
+      "songs": [
+        "nightmare-on-simca-lane-dark-gothic-country",
+        "nightmare-on-simca-lane-dark-cinematic-pop",
+        "nightmare-on-simca-lane-80s-synth",
+        "nightmare-on-simca-lane-60s-spooky-surf-rock",
+        "nightmare-on-simca-lane"
+      ],
+      "by": "Craig",
+      "updated": "2026-10-28T18:14:55.813Z"
     }
   ],
   "youtubePlaylists": [
